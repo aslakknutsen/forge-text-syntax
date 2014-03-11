@@ -4,12 +4,14 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 
+import org.forge.text.syntax.scanner.HTMLScanner;
 import org.forge.text.syntax.scanner.JavaScanner;
 
 public class Syntax {
 
    static {
       Scanner.Factory.registrer(Scanner.Type.JAVA.name(), JavaScanner.class);
+      Scanner.Factory.registrer(Scanner.Type.HTML.name(), HTMLScanner.class);
    }
    
    public static String scan(String source, Scanner.Type scannerType, Encoder.Type encoderType) {
