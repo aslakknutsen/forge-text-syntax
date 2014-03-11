@@ -111,11 +111,13 @@ public class CSSScanner implements Scanner {
          }
          else if( (m = source.scan(Function)) != null ){
             encoder.beginGroup(TokenType.function);
-            String start = Pattern.compile("^\\w+\\(").matcher(m.group()).group();
+            Matcher functionMatcher = Pattern.compile("^\\w+\\(").matcher(m.group());
+            functionMatcher.lookingAt();
+            String start = functionMatcher.group();
             encoder.textToken(start, TokenType.delimiter);
-            if(m.group().substring(m.group().length()-1).equals("?)")) {
+            if(m.group().substring(m.group().length()-1).matches(".?\\)")) {
                if(m.group().length() > start.length()+1) {
-                  encoder.textToken(m.group().substring(start.length(), m.group().length()-2), TokenType.content);
+                  encoder.textToken(m.group().substring(start.length(), m.group().length()-1), TokenType.content);
                   encoder.textToken(")", TokenType.delimiter);
                }
             }
@@ -180,7 +182,7 @@ public class CSSScanner implements Scanner {
             if(m.group().length() > 2) {
                encoder.textToken(m.group().substring(1, m.group().length()-2), TokenType.attribute_name);
             }
-            if(m.group().substring(m.group().length()-1).equals("?]")) { // not 100% sure what == ?] means in ruby
+            if(m.group().substring(m.group().length()-1).matches(".?\\]")) {
                encoder.textToken(m.group().substring(m.group().length()-1), TokenType.operator);
             }
             return true;
