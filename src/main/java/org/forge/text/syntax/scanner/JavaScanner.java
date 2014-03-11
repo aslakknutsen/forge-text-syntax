@@ -194,8 +194,9 @@ public class JavaScanner implements Scanner {
          default:
             throw new RuntimeException("unknown state " + state);
          }
-         
-         last_token_dot = (".".equals(m.group()));
+         if(m != null) {
+            last_token_dot = (".".equals(m.group()));
+         }
       }
       if(state == State.string) {
          encoder.endGroup(TokenType.string);
