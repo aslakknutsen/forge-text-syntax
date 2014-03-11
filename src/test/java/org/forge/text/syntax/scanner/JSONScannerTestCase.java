@@ -1,9 +1,9 @@
-package org.forge.text.syntax;
+package org.forge.text.syntax.scanner;
 
-import static org.forge.text.syntax.AssertEncoder.assertTextToken;
+import static org.forge.text.syntax.encoder.AssertEncoder.assertTextToken;
 
-import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.Scanner;
+import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.TokenType;
 import org.junit.Test;
 

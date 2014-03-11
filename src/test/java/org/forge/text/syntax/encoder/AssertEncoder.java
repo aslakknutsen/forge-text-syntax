@@ -1,4 +1,4 @@
-package org.forge.text.syntax;
+package org.forge.text.syntax.encoder;
 
 import java.io.OutputStream;
 import java.util.HashMap;

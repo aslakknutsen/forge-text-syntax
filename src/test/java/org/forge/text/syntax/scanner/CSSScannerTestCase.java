@@ -1,9 +1,9 @@
-package org.forge.text.syntax;
+package org.forge.text.syntax.scanner;
 
-import static org.forge.text.syntax.AssertEncoder.assertTextToken;
+import static org.forge.text.syntax.encoder.AssertEncoder.assertTextToken;
 
-import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.Scanner;
+import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.TokenType;
 import org.junit.Test;
 
@@ -13,6 +13,7 @@ public class CSSScannerTestCase extends AbstractScannerTestCase {
    public void should() throws Exception {
       
       String source =
+            "@import url(\"resource:///org/gnome/adwaita/gtk-main-dark.css\");\n" +
             ".effeckt-button,\n" + 
             ".effeckt-button .spinner,\n" + 
             ".effeckt-button .label {\n" + 
@@ -27,6 +28,8 @@ public class CSSScannerTestCase extends AbstractScannerTestCase {
       
       Syntax.scan(source, Scanner.Type.CSS.name(), ASSERT_ENCODER, System.out);
  
+      assertTextToken(TokenType.directive, "@import");
+      assertTextToken(TokenType.content, "\"resource:///org/gnome/adwaita/gtk-main-dark.css\"");
       assertTextToken(TokenType.class_, ".effeckt-button", ".spinner", ".label");
       assertTextToken(TokenType.float_, "500", "0.175", "0.885", "0.32");
       assertTextToken(TokenType.value, "ms", "all", "px");
