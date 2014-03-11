@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface Encoder {
 
-   public enum Type { TERMINAL }
+   public enum Type { TERMINAL, DEBUG }
 
    void textToken(String text, TokenType type);
    void beginGroup(TokenType type);
