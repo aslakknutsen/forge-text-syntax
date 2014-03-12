@@ -102,7 +102,7 @@ public class CSSScanner implements Scanner {
             encoder.beginGroup(TokenType.string);
             encoder.textToken(m.group().substring(0,  1), TokenType.delimiter);
             if(m.group().length() > 2) {
-               encoder.textToken(m.group().substring(1, m.group().length()-2), TokenType.content);
+               encoder.textToken(m.group().substring(1, m.group().length()-1), TokenType.content);
             }
             if(m.group().length() >= 2) {
                encoder.textToken(m.group().substring(m.group().length()-1), TokenType.delimiter);
@@ -180,7 +180,7 @@ public class CSSScanner implements Scanner {
          else if( (m = source.scan(AttributeSelector)) != null ) {
             encoder.textToken(m.group().substring(0, 1), TokenType.operator);
             if(m.group().length() > 2) {
-               encoder.textToken(m.group().substring(1, m.group().length()-2), TokenType.attribute_name);
+               encoder.textToken(m.group().substring(1, m.group().length()-1), TokenType.attribute_name);
             }
             if(m.group().substring(m.group().length()-1).matches(".?\\]")) {
                encoder.textToken(m.group().substring(m.group().length()-1), TokenType.operator);

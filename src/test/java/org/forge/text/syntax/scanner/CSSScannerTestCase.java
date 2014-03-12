@@ -12,28 +12,52 @@ public class CSSScannerTestCase extends AbstractScannerTestCase {
    @Test
    public void should() throws Exception {
       
-      String source =
-            "@import url(\"resource:///org/gnome/adwaita/gtk-main-dark.css\");\n" +
-            ".effeckt-button,\n" + 
-            ".effeckt-button .spinner,\n" + 
-            ".effeckt-button .label {\n" + 
-            "  -webkit-transition: 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275) all;\n" + 
-            "  -o-transition: 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275) all;\n" + 
-            "  transition: 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275) all;\n" + 
-            "}\n" + 
-            "\n" + 
-            ".effeckt-button[data-effeckt-type=\"expand-right\"] .spinner {\n" + 
-            "  right: 16px;\n" + 
+      String source = "/* See http://reference.sitepoint.com/css/content. */\n" +
+            "@media print {\n" +
+            "  a[href]:after {\n" +
+            "    content: \"<\" attr(href) \">\";\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "a:link:after, a:visited:after {content:\" (\" attr(href) \")\";font-size:90%;}\n" +
+            "ol {\n" +
+            "  counter-reset: item;\n" +
+            "  margin: 0;\n" +
+            "  padding: 0.7px;\n" +
+            "}\n" +
+            ".some {}" +
+            "ol>li {\n" +
+            "  counter-increment: item;\n" +
+            "  list-style: none inside;\n" +
+            "}\n" +
+            "ol>li:before {\n" +
+            "  content: counters(item, \".\") \" - \";\n" +
+            "}\n" +
+            "\n" +
+            "body {\n" +
+            "  counter-reset: chapter;\n" +
+            "}\n" +
+            "h1 {\n" +
+            "  counter-increment: chapter;\n" +
+            "  counter-reset: section;\n" +
+            "}\n" +
+            "h2 {\n" +
+            "  counter-increment: section;\n" +
+            "}\n" +
+            "h2:before {\n" +
+            "  content: counter(chapter) \".\" counter(section) \" \";\n" +
             "}\n";
       
       Syntax.scan(source, Scanner.Type.CSS.name(), ASSERT_ENCODER, System.out);
  
-      assertTextToken(TokenType.directive, "@import");
-      assertTextToken(TokenType.content, "\"resource:///org/gnome/adwaita/gtk-main-dark.css\"");
-      assertTextToken(TokenType.class_, ".effeckt-button", ".spinner", ".label");
-      assertTextToken(TokenType.float_, "500", "0.175", "0.885", "0.32");
-      assertTextToken(TokenType.value, "ms", "all", "px");
-      assertTextToken(TokenType.key, "-o-transition", "transition", "right");
+      assertTextToken(TokenType.attribute_name, "href");
+      assertTextToken(TokenType.directive, "@media");
+      assertTextToken(TokenType.comment, "/* See http://reference.sitepoint.com/css/content. */");
+      assertTextToken(TokenType.tag, "a", "body", "ol");
+      assertTextToken(TokenType.class_, ".some");
+      assertTextToken(TokenType.float_, "0", "0.7");
+      assertTextToken(TokenType.value, "px");
+      assertTextToken(TokenType.key, "list-style", "counter-increment", "margin");
       assertTextToken(TokenType.operator, ";", "{", "}", ",");
    }
 }
