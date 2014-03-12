@@ -10,6 +10,7 @@ import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.StringScanner;
 import org.forge.text.syntax.TokenType;
 import org.forge.text.syntax.WordList;
+import org.forge.text.syntax.scanner.java.BuiltInTypes;
 
 /*
  * Based on https://github.com/rubychan/coderay/blob/master/lib/coderay/scanners/java.rb
@@ -66,8 +67,8 @@ public class JavaScanner implements Scanner {
                                              .add(CONSTANTS, TokenType.predefined_constant)
                                              .add(MAGIC_VARIABLES, TokenType.local_variable)
                                              .add(TYPES, TokenType.type)
-                                             //add(BuiltinTypes::List, :predefined_type).
-                                             //add(BuiltinTypes::List.select { |builtin| builtin[/(Error|Exception)$/] }, :exception).
+                                             .add(BuiltInTypes.PREDEFINED_TYPES, TokenType.predefined_type)
+                                             .add(BuiltInTypes.EXCEPTION_TYPES, TokenType.exception)
                                              .add(DIRECTIVES, TokenType.directive);
 
    public static final Map<String, Pattern> STRING_CONTENT_PATTERN = new HashMap<String, Pattern>(); 
@@ -99,7 +100,7 @@ public class JavaScanner implements Scanner {
                continue;
             }
             else if( package_name_expected != null && (m = source.scan(
-                  Pattern.compile(Patterns.IDENT.pattern.pattern() + "(?:\\." + Patterns.IDENT.pattern.pattern()+ "})*"))) != null) {
+                  Pattern.compile(Patterns.IDENT.pattern.pattern() + "(?:\\." + Patterns.IDENT.pattern.pattern()+ ")*"))) != null) {
                encoder.textToken(m.group(), package_name_expected);
             }
             else if( (m = source.scan(Pattern.compile(Patterns.IDENT.pattern.pattern() + "|\\[\\]"))) != null) {
@@ -169,15 +170,15 @@ public class JavaScanner implements Scanner {
                state = State.initial;
                string_delimiter = null;
             }
-            else if( state == State.string && (m = source.scan(
-                  "/\\\\(?:" + Patterns.ESCAPE.pattern.pattern() +"|" + Patterns.UNICODE_ESCAPE.pattern.pattern() + ")/m")) != null) {
+            else if( state == State.string && (m = source.scan(Pattern.compile(
+                  "/\\\\(?:" + Patterns.ESCAPE.pattern.pattern() +"|" + Patterns.UNICODE_ESCAPE.pattern.pattern() + ")", Pattern.DOTALL))) != null) {
                if("'".equals(string_delimiter) && !("\\\"".equals(m.group()) || "\\'".equals(m.group())) ) {
                   encoder.textToken(m.group(), TokenType.content);
                } else {
                   encoder.textToken(m.group(), TokenType.char_);
                }
             }
-            else if( (m = source.scan("\\\\./m")) != null ) {
+            else if( (m = source.scan(Pattern.compile("\\\\.", Pattern.DOTALL))) != null ) {
                encoder.textToken(m.group(), TokenType.content);
             }
             else if( (m = source.scan("\\\\|$")) != null ) {

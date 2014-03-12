@@ -12,27 +12,28 @@ public class JavaScannerTestCase extends AbstractScannerTestCase {
    @Test
    public void should() throws Exception {
       
-      String source = "package org.forge.coderayj.scanner;\n" + 
+      String source = "package pl.silvermedia.ws;\n" +
+            "import java.util.List;\n" +
             "\n" +
-            "import org.forge.coderayj.Encoder;\n" + 
-            "import org.forge.coderayj.Scanner;\n" + 
+            "import javax.jws.WebParam;\n" +
+            "import javax.jws.WebService;\n" +
             "\n" +
-            "private String source = null;\n" +
-            "\n" +
-            "public class JavaScanner implements Scanner {\n" + 
-            "\n" + 
-            "   @Override\n" + 
-            "   public void scan(String source, Encoder encoder) {\n" + 
-            "     Sring a = \"aaa\"\n" + 
-            "   }\n" +  
-            "}\n";
-      
+            "@WebService\n" +
+            "public interface ContactUsService {\n" +
+            "  List<Message> getMessages();\n" +
+            "  Message getFirstMessage();\n" +
+            "    void postMessage(@WebParam(name = \"message\") Message message);\n" +
+            "}\n" +
+            "";
+
       Syntax.scan(source, Scanner.Type.JAVA.name(), ASSERT_ENCODER, System.out);
 
-      assertTextToken(TokenType.include, "org", "forge");
+      assertTextToken(TokenType.namespace, "pl.silvermedia.ws");
+      assertTextToken(TokenType.predefined_type, "List");
+      //assertTextToken(TokenType.exception, "ZipException");
       assertTextToken(TokenType.keyword, "import");
-      assertTextToken(TokenType.type, "void", "class");
+      assertTextToken(TokenType.type, "void", "interface");
       assertTextToken(TokenType.directive, "public");
-      assertTextToken(TokenType.content, "aaa");
+      assertTextToken(TokenType.content, "message");
    }
 }
