@@ -4,12 +4,11 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.forge.text.syntax.Encoder;
 import org.forge.text.syntax.Theme;
 import org.forge.text.syntax.TokenType;
 import org.junit.Assert;
 
-public class AssertEncoder extends Encoder.AbstractEncoder {
+public class AssertEncoder extends DebugEncoder {
 
    public AssertEncoder(OutputStream out, Theme theme) {
       super(out, theme);
@@ -19,22 +18,7 @@ public class AssertEncoder extends Encoder.AbstractEncoder {
    @Override
    public void textToken(String text, TokenType type) {
       textTokens.add(new TokenPair(text, type));
-   }
-
-   @Override
-   public void beginGroup(TokenType type) {
-   }
-
-   @Override
-   public void endGroup(TokenType type) {
-   }
-
-   @Override
-   public void beginLine(TokenType type) {
-   }
-
-   @Override
-   public void endLine(TokenType type) {
+      super.textToken(text, type);
    }
 
    private static List<TokenPair> textTokens = new ArrayList<TokenPair>();
