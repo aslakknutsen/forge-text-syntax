@@ -25,27 +25,35 @@ public class DebugEncoder extends Encoder.AbstractEncoder implements Encoder {
          if(output.indexOf(")") != -1) {
             output = output.replaceAll("\\)", "\\\\)");
          }
-         write(type + "(" + output + ")");
+         write(fixTokeName(type) + "(" + output + ")");
       }
    }
 
    @Override
    public void beginGroup(TokenType type) {
-      writeln(type + "<");
+      write(fixTokeName(type) + "<");
    }
 
    @Override
    public void endGroup(TokenType type) {
-      writeln(">");
+      write(">");
    }
 
    @Override
    public void beginLine(TokenType type) {
-      writeln(type + "[");
+      write(fixTokeName(type) + "[");
    }
 
    @Override
    public void endLine(TokenType type) {
-      writeln("]");
+      write("]");
+   }
+
+   public String fixTokeName(TokenType type) {
+      String name = type.name();
+      if(name.endsWith("_")) {
+         name = name.substring(0, name.length()-1);
+      }
+      return name;
    }
 }
