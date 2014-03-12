@@ -12,33 +12,34 @@ public class JSONScannerTestCase extends AbstractScannerTestCase {
    @Test
    public void should() throws Exception {
       
-      String source = 
-            "{\n" + 
-            "    \"firstName\": \"John\",\n" + 
-            "    \"lastName\": \"Smith\",\n" + 
-            "    \"age\": 25.5,\n" + 
-            "    \"address\": {\n" + 
-            "        \"streetAddress\": \"21 2nd Street\",\n" + 
-            "        \"city\": \"New York\",\n" + 
-            "        \"state\": \"NY\",\n" + 
-            "        \"postalCode\": 10021\n" + 
-            "    },\n" + 
-            "    \"phoneNumbers\": [\n" + 
-            "        {\n" + 
-            "            \"type\": \"home\",\n" + 
-            "            \"number\": \"212 555-1234\"\n" + 
-            "        },\n" + 
-            "        {\n" + 
-            "            \"type\": \"fax\",\n" + 
-            "            \"number\": \"646 555-4567\"\n" + 
-            "        }\n" + 
-            "    ]\n" + 
-            "}";
-      
+      String source = "[\n" +
+            "   {\n" +
+            "      \"precision\": \"zip\",\n" +
+            "      \"Latitude\":  37,\n" +
+            "      \"Longitude\": -122.3959,\n" +
+            "      \"Address\":   \"\",\n" +
+            "      \"City\":      \"SAN FRANCISCO\",\n" +
+            "      \"State\":     \"CA\",\n" +
+            "      \"Zip\":       \"94107\",\n" +
+            "      \"Country\":   \"US\"\n" +
+            "   },\n" +
+            "   {\n" +
+            "      \"precision\": \"zip\",\n" +
+            "      \"Latitude\":  37.371991,\n" +
+            "      \"Longitude\": -122.026020,\n" +
+            "      \"Address\":   \"\",\n" +
+            "      \"City\":      \"SUNNYVALE\",\n" +
+            "      \"State\":     \"CA\",\n" +
+            "      \"Zip\":       \"94085\",\n" +
+            "      \"Country\":   \"US\"\n" +
+            "   }\n" +
+            "]\n";
+
       Syntax.scan(source, Scanner.Type.JSON.name(), ASSERT_ENCODER, System.out);
-      
-      assertTextToken(TokenType.content, "John", "Smith", "home");
-      assertTextToken(TokenType.integer, "10021");
-      assertTextToken(TokenType.float_, "25.5");
+
+      assertTextToken(TokenType.content, "Zip", "precision");
+      assertTextToken(TokenType.content, "zip", "CA", "US");
+      assertTextToken(TokenType.integer, "37");
+      assertTextToken(TokenType.float_, "37.371991", "-122.3959");
    }
 }

@@ -16,7 +16,7 @@ public class JSONScanner implements Scanner {
 
    public static final Pattern ESCAPE = Pattern.compile("[bfnrt\\\\\"\\/]");
    public static final Pattern UNICODE_ESCAPE = Pattern.compile("u[a-fA-F0-9]{4}");
-   public static final Pattern KEY = Pattern.compile("(?>(?:[^\\\\\"]+|\\\\.)*)\"\\s*:;");
+   public static final Pattern KEY = Pattern.compile("(?>(?:[^\\\\\"]+|\\\\.)*)\"\\s*:");
    
    public enum State {
       initial,
