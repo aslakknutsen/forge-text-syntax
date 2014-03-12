@@ -1,6 +1,6 @@
 package org.forge.text.syntax.scanner;
 
-import java.util.regex.Matcher;
+import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import org.forge.text.syntax.Encoder;
@@ -29,7 +29,7 @@ public class JSONScanner implements Scanner {
       State state = State.initial;
       
       while(source.hasMore()) {
-         Matcher m = null;
+         MatchResult m = null;
       
          switch (state) {
          

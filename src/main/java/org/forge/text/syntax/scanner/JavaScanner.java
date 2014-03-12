@@ -2,7 +2,7 @@ package org.forge.text.syntax.scanner;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
+import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import org.forge.text.syntax.Encoder;
@@ -18,25 +18,30 @@ import org.forge.text.syntax.scanner.java.BuiltInTypes;
  */
 public class JavaScanner implements Scanner {
 
-   private enum Patterns {
-      SPACE("\\s+|\\n"),
-      COMMENT("[^\\n\\\\]* (?: \\\\. [^\\n\\\\]* )* | /\\* (?: .*? \\*/ | .* ) !mx"),
-      IDENT("[a-zA-Z_][A-Za-z_0-9]*"),
-      OPERATORS("\\.(?!\\d)|[,?:()\\[\\]}]|--|\\+\\+|&&|\\|\\||\\*\\*=?|[-+*\\/%^~&|<>=!]=?|<<<?=?|>>>?=?"),
-      STRING_CONTENT_PATTERN_SINGLE("[^\\\\']+"),
-      STRING_CONTENT_PATTERN_DOUBLE("[^\\\\\"]+"),
-      STRING_CONTENT_PATTERN_MULTI_LINE("[^\\\\\\/]+"),
-      ESCAPE("[bfnrtv\\n\\\\'\"]|x[a-fA-F0-9]{1,2}|[0-7]{1,3}"),
-      UNICODE_ESCAPE("u[a-fA-F0-9]{4}|U[a-fA-F0-9]{8}");
-      
-      private Pattern pattern;
-      Patterns(String pattern) {
-         this.pattern = Pattern.compile(pattern);
-      }
-      Patterns(String pattern, int options) {
-         this.pattern = Pattern.compile(pattern, options);
-      }
-   }
+   public static final Pattern SPACE = Pattern.compile("\\s+|\\n");
+   public static final Pattern COMMENT = Pattern.compile("[^\\n\\\\]* (?: \\\\. [^\\n\\\\]* )* | /\\* (?: .*? \\*/ | .* ) !mx");
+   public static final Pattern IDENT   = Pattern.compile("[a-zA-Z_][A-Za-z_0-9]*");
+   public static final Pattern OPERATORS = Pattern.compile("\\.(?!\\d)|[,?:()\\[\\]}]|--|\\+\\+|&&|\\|\\||\\*\\*=?|[-+*\\/%^~&|<>=!]=?|<<<?=?|>>>?=?");
+   public static final Pattern STRING_CONTENT_PATTERN_SINGLE = Pattern.compile("[^\\\\']+");
+   public static final Pattern STRING_CONTENT_PATTERN_DOUBLE = Pattern.compile("[^\\\\\"]+");
+   public static final Pattern STRING_CONTENT_PATTERN_MULTI_LINE = Pattern.compile("[^\\\\\\/]+");
+   public static final Pattern ESCAPE = Pattern.compile("[bfnrtv\\n\\\\'\"]|x[a-fA-F0-9]{1,2}|[0-7]{1,3}");
+   public static final Pattern UNICODE_ESCAPE = Pattern.compile("u[a-fA-F0-9]{4}|U[a-fA-F0-9]{8}");
+   public static final Pattern ANNOTATION = Pattern.compile("@" + IDENT.pattern());
+   public static final Pattern PACKAGE = Pattern.compile(IDENT.pattern() + "(?:\\." + IDENT.pattern()+ ")*");
+   public static final Pattern IDENT_OR_ARRAY_TYPE = Pattern.compile(IDENT.pattern() + "|\\[\\]");
+   public static final Pattern SEMI_COLON = Pattern.compile(";");
+   public static final Pattern OPEN_BRAKCET = Pattern.compile("\\{");
+   public static final Pattern ANY_WORD = Pattern.compile("[\\d.]");
+   public static final Pattern HEX = Pattern.compile("0[xX][0-9A-Fa-f]+");
+   public static final Pattern OCTAL = Pattern.compile("(?>0[0-7]+)(?![89.eEfF])");
+   public static final Pattern FLOAT = Pattern.compile("\\d+[fFdD]|\\d*\\.\\d+(?:[eE][+-]?\\d+)?[fFdD]?|\\d+[eE][+-]?\\d+[fFdD]?");
+   public static final Pattern INTEGER = Pattern.compile("\\d+[lL]?");
+   public static final Pattern START_STRING = Pattern.compile("[\"']");
+   public static final Pattern END_STRING = Pattern.compile("[\"'\\/]");
+   public static final Pattern STRING_CONTENT = Pattern.compile("/\\\\(?:" + ESCAPE.pattern() +"|" + UNICODE_ESCAPE.pattern() + ")", Pattern.DOTALL);
+   public static final Pattern STRING_CONTENT_2 = Pattern.compile("\\\\.", Pattern.DOTALL);
+   public static final Pattern END_GROUP = Pattern.compile("\\\\|$");
    
    public enum State {
       initial,
@@ -73,9 +78,9 @@ public class JavaScanner implements Scanner {
 
    public static final Map<String, Pattern> STRING_CONTENT_PATTERN = new HashMap<String, Pattern>(); 
    {
-      STRING_CONTENT_PATTERN.put("'", Patterns.STRING_CONTENT_PATTERN_SINGLE.pattern);
-      STRING_CONTENT_PATTERN.put("\"", Patterns.STRING_CONTENT_PATTERN_DOUBLE.pattern);
-      STRING_CONTENT_PATTERN.put("/", Patterns.STRING_CONTENT_PATTERN_MULTI_LINE.pattern);
+      STRING_CONTENT_PATTERN.put("'", STRING_CONTENT_PATTERN_SINGLE);
+      STRING_CONTENT_PATTERN.put("\"",STRING_CONTENT_PATTERN_DOUBLE);
+      STRING_CONTENT_PATTERN.put("/", STRING_CONTENT_PATTERN_MULTI_LINE);
    }       
    
    @Override
@@ -87,23 +92,22 @@ public class JavaScanner implements Scanner {
       boolean last_token_dot = false;
       
       while(source.hasMore()) {
-         Matcher m = null;
+         MatchResult m = null;
          
          switch (state) {
          case initial:
-            if( (m = source.scan(Patterns.SPACE.pattern)) != null) {
+            if( (m = source.scan(SPACE)) != null) {
                encoder.textToken(m.group(), TokenType.space);
                continue;
             }
-            else if( (m = source.scan(Patterns.COMMENT.pattern)) != null) {
+            else if( (m = source.scan(COMMENT)) != null) {
                encoder.textToken(m.group(), TokenType.comment);
                continue;
-            }
-            else if( package_name_expected != null && (m = source.scan(
-                  Pattern.compile(Patterns.IDENT.pattern.pattern() + "(?:\\." + Patterns.IDENT.pattern.pattern()+ ")*"))) != null) {
+            } 
+            else if( package_name_expected != null && (m = source.scan(PACKAGE)) != null) {
                encoder.textToken(m.group(), package_name_expected);
             }
-            else if( (m = source.scan(Pattern.compile(Patterns.IDENT.pattern.pattern() + "|\\[\\]"))) != null) {
+            else if( (m = source.scan(IDENT_OR_ARRAY_TYPE)) != null) {
                String match = m.group();
                TokenType kind = IDENT_KIND.lookup(match);
                if(last_token_dot) {
@@ -122,38 +126,38 @@ public class JavaScanner implements Scanner {
                }
                encoder.textToken(match, kind);
             }
-            else if( (m = source.scan(Patterns.OPERATORS.pattern)) != null ) {
+            else if( (m = source.scan(OPERATORS)) != null ) {
                encoder.textToken(m.group(), TokenType.operator);
             }
-            else if( (m = source.scan(";")) != null) {
+            else if( (m = source.scan(SEMI_COLON)) != null) {
                package_name_expected = null;
                encoder.textToken(m.group(), TokenType.operator);
             }
-            else if( (m = source.scan("\\{")) != null) {
+            else if( (m = source.scan(OPEN_BRAKCET)) != null) {
                class_name_follows = false;
                encoder.textToken(m.group(), TokenType.operator);
             }
-            else if( (m = source.check("[\\d.]")) != null ) {
-               if( (m = source.scan("0[xX][0-9A-Fa-f]+")) != null) {
+            else if( (m = source.check(ANY_WORD)) != null ) {
+               if( (m = source.scan(HEX)) != null) {
                   encoder.textToken(m.group(), TokenType.hex);
                }
-               else if( (m = source.scan("(?>0[0-7]+)(?![89.eEfF])")) != null) {
+               else if( (m = source.scan(OCTAL)) != null) {
                   encoder.textToken(m.group(), TokenType.octal);
                }
-               else if( (m = source.scan("\\d+[fFdD]|\\d*\\.\\d+(?:[eE][+-]?\\d+)?[fFdD]?|\\d+[eE][+-]?\\d+[fFdD]?")) != null) {
+               else if( (m = source.scan(FLOAT)) != null) {
                   encoder.textToken(m.group(), TokenType.float_);
                }
-               else if( (m = source.scan("\\d+[lL]?")) != null) {
+               else if( (m = source.scan(INTEGER)) != null) {
                   encoder.textToken(m.group(), TokenType.integer);
                }
             }
-            else if( (m = source.scan("[\"']")) != null) {
+            else if( (m = source.scan(START_STRING)) != null) {
                state = State.string;
                encoder.beginGroup(TokenType.string);
                string_delimiter = m.group();
                encoder.textToken(m.group(), TokenType.delimiter);
             }
-            else if( (m = source.scan("@" + Patterns.IDENT.pattern)) != null ) {
+            else if( (m = source.scan(ANNOTATION)) != null ) {
                encoder.textToken(m.group(), TokenType.annotation);
             }
             else {
@@ -164,24 +168,23 @@ public class JavaScanner implements Scanner {
             if( (m = source.scan(STRING_CONTENT_PATTERN.get(string_delimiter))) != null ) {
                encoder.textToken(m.group(), TokenType.content);
             }
-            else if( (m = source.scan("[\"'\\/]")) != null ) {
+            else if( (m = source.scan(END_STRING)) != null ) {
                encoder.textToken(m.group(), TokenType.delimiter);
                encoder.endGroup(TokenType.string);
                state = State.initial;
                string_delimiter = null;
             }
-            else if( state == State.string && (m = source.scan(Pattern.compile(
-                  "/\\\\(?:" + Patterns.ESCAPE.pattern.pattern() +"|" + Patterns.UNICODE_ESCAPE.pattern.pattern() + ")", Pattern.DOTALL))) != null) {
+            else if( state == State.string && (m = source.scan(STRING_CONTENT)) != null) {
                if("'".equals(string_delimiter) && !("\\\"".equals(m.group()) || "\\'".equals(m.group())) ) {
                   encoder.textToken(m.group(), TokenType.content);
                } else {
                   encoder.textToken(m.group(), TokenType.char_);
                }
             }
-            else if( (m = source.scan(Pattern.compile("\\\\.", Pattern.DOTALL))) != null ) {
+            else if( (m = source.scan(STRING_CONTENT_2)) != null ) {
                encoder.textToken(m.group(), TokenType.content);
             }
-            else if( (m = source.scan("\\\\|$")) != null ) {
+            else if( (m = source.scan(END_GROUP)) != null ) {
                encoder.endGroup(TokenType.string);
                state = State.initial;
                if(!m.group().isEmpty()) {

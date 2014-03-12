@@ -18,7 +18,7 @@ public class TerminalEncoder extends Encoder.AbstractEncoder implements Encoder 
    public void textToken(String text, TokenType type) {
       Color color = color(type);
       if(color != null) {
-         write(new TerminalString(new TerminalColor(color), text).toString());
+         write(TerminalString.of(color, text));
       }
       else {
          write(text);
@@ -47,35 +47,17 @@ public class TerminalEncoder extends Encoder.AbstractEncoder implements Encoder 
       public static final String END = "m";
       public static final String RESET = "\u001B[0" + END;
 
-      private TerminalColor color;
-      private String content;
-
-      public TerminalString(TerminalColor color, String content) {
-         this.color = color;
-         this.content = content;
-      }
-
-      @Override
-      public String toString() {
+      public static String of(Color color, String text) {
          StringBuilder sb = new StringBuilder();
          sb.append(START_COLOR)
-            .append(color.toString())
+            .append(from(color))
             .append(END);
-         sb.append(content);
+         sb.append(text);
          sb.append(RESET);
          return sb.toString();
       }
-   }
 
-   public static class TerminalColor {
-      public Color color;
-
-      public TerminalColor(Color color) {
-         this.color = color;
-      }
-
-      @Override
-      public String toString() {
+      public static String from(Color color) {
          return String.valueOf(
                rgbToAnsi(
                      color.getRed(),
@@ -83,11 +65,11 @@ public class TerminalEncoder extends Encoder.AbstractEncoder implements Encoder 
                      color.getBlue()));
       }
 
-      private int rgbToAnsi(int red, int green, int blue) {
+      private static int rgbToAnsi(int red, int green, int blue) {
          return 16 + (getAnsiScale(red) * 36) + (getAnsiScale(green) * 6) + getAnsiScale(blue);
       }
 
-      public int getAnsiScale(int color) {
+      public static int getAnsiScale(int color) {
          int space = 256/5;
          if(color == 0) {
             return 0;

@@ -3,6 +3,7 @@ package org.forge.text.syntax.scanner;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,7 +76,7 @@ public class CSSScanner implements Scanner {
       state.push(State.initial);
       
       while(source.hasMore()) {
-         Matcher m = null;
+         MatchResult m = null;
       
          if( (m = source.scan("\\s+")) != null) {
             encoder.textToken(m.group(), TokenType.space);
@@ -156,7 +157,7 @@ public class CSSScanner implements Scanner {
    }
 
    private boolean media_blocks(StringScanner source, Encoder encoder, boolean value_expected, Stack<State> state) {
-      Matcher m;
+      MatchResult m;
       switch (state.peek()) {
       
       case initial:

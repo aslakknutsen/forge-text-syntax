@@ -1,6 +1,7 @@
 package org.forge.text.syntax;
 
 import java.awt.Color;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -76,7 +77,7 @@ public class Syntax {
          throw new RuntimeException("Could not read given file " + fileName, e);
       }
 
-      scan(content, type, encoder, System.out);
+      scan(content, type, encoder, new BufferedOutputStream(System.out));
    }
 
    private static Scanner.Type determineType(String fileName) {

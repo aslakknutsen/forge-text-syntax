@@ -2,7 +2,7 @@ package org.forge.text.syntax.scanner;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
+import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import org.forge.text.syntax.Encoder;
@@ -69,7 +69,7 @@ public class HTMLScanner implements Scanner {
       Pattern plain_string_content = null;
       
       while(source.hasMore()) {
-         Matcher m = null;
+         MatchResult m = null;
       
          if( state != State.in_special_tag && (m = source.scan(Pattern.compile("\\s+", Pattern.DOTALL))) != null) {
             encoder.textToken(m.group(), TokenType.space);
