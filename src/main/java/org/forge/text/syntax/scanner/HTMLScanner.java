@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import org.forge.text.syntax.Encoder;
 import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.StringScanner;
+import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.TokenType;
 import org.forge.text.syntax.WordList;
 
@@ -173,11 +174,17 @@ public class HTMLScanner implements Scanner {
                   if(EmbeddedType.script == in_attribute || EmbeddedType.style == in_attribute) {
                      encoder.beginGroup(TokenType.string);
                      encoder.textToken(m.group(), TokenType.delimiter);
+                     String groupStart = m.group();
+
                      if( (m = source.scan("javascript:[ \\t]*")) != null ) {
                         encoder.textToken(m.group(), TokenType.comment);
                      }
                      // unsupported
-                     //code = scan_until(match == '"' ? /(?="|\z)/ : /(?='|\z)/)
+                     String code = source.scanUntil(Pattern.compile("(?=" + groupStart + "|\\z)")).group();
+                     if(EmbeddedType.style == in_attribute) {
+                        Syntax.scan(code, Scanner.Type.CSS, encoder);
+                     }
+
                      //if in_attribute == :script
                      // scan_java_script encoder, code
                      // else

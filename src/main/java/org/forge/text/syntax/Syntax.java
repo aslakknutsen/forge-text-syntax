@@ -47,6 +47,15 @@ public class Syntax {
       scanner.scan(new StringScanner(source), encoder);
    }
 
+   public static void scan(String source, Scanner.Type scannerType, Encoder encoder) {
+      scan(new StringScanner(source), scannerType, encoder);
+   }
+
+   public static void scan(StringScanner source, Scanner.Type scannerType, Encoder encoder) {
+      Scanner scanner = Scanner.Factory.create(scannerType.name());
+      scanner.scan(source, encoder);
+   }
+
    public static Theme defaultTheme() {
       return new Theme(Color.WHITE)
          .set(Color.RED, TokenType.predefined_constant, TokenType.content, TokenType.delimiter, TokenType.color, TokenType.value, TokenType.integer, TokenType.float_)
