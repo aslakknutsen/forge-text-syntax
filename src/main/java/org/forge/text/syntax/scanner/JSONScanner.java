@@ -1,5 +1,6 @@
 package org.forge.text.syntax.scanner;
 
+import java.util.Map;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
@@ -25,7 +26,7 @@ public class JSONScanner implements Scanner {
    }
    
    @Override
-   public void scan(StringScanner source, Encoder encoder) {
+   public void scan(StringScanner source, Encoder encoder, Map<String, Object> options) {
       State state = State.initial;
       
       while(source.hasMore()) {

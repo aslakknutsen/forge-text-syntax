@@ -84,7 +84,7 @@ public class JavaScanner implements Scanner {
    }       
    
    @Override
-   public void scan(StringScanner source, Encoder encoder) {
+   public void scan(StringScanner source, Encoder encoder, Map<String, Object> options) {
       State state = State.initial;
       String string_delimiter = null;
       TokenType package_name_expected = null;

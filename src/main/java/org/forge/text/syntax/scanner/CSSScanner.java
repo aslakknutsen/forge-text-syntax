@@ -2,6 +2,7 @@ package org.forge.text.syntax.scanner;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
@@ -70,7 +71,7 @@ public class CSSScanner implements Scanner {
    }
 
    @Override
-   public void scan(StringScanner source, Encoder encoder) {
+   public void scan(StringScanner source, Encoder encoder, Map<String, Object> options) {
       boolean value_expected = false;
       Stack<State> state = new Stack<State>();
       state.push(State.initial);

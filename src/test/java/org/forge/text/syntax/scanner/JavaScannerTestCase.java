@@ -31,7 +31,7 @@ public class JavaScannerTestCase extends AbstractScannerTestCase {
             "}\n" +
             "";
 
-      Syntax.scan(source, Scanner.Type.JAVA.name(), ASSERT_ENCODER, System.out);
+      Syntax.Builder.create().scannerType(Scanner.Type.JAVA).encoderType(ASSERT_ENCODER).execute(source);
 
       assertTextToken(TokenType.comment, "/***** BEGIN LICENSE BLOCK ***** */");
       assertTextToken(TokenType.namespace, "pl.silvermedia.ws");

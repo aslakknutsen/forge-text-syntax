@@ -7,7 +7,7 @@ public interface Scanner {
    
    public enum Type { JAVA, HTML, CSS, JSON }
    
-   void scan(StringScanner source, Encoder encoder);
+   void scan(StringScanner source, Encoder encoder, Map<String, Object> options);
    
    public static class Factory {
       private static Factory factory;
@@ -30,12 +30,12 @@ public interface Scanner {
       }
       
       public static Scanner create(String type) {
-         Class<? extends Scanner> encoder = instance().registry.get(type); 
-         if(encoder != null) {
+         Class<? extends Scanner> scanner = instance().registry.get(type); 
+         if(scanner != null) {
             try {
-               return encoder.newInstance();
+               return scanner.newInstance();
             } catch(Exception e) {
-               throw new RuntimeException("Could not create new instance of " + encoder);
+               throw new RuntimeException("Could not create new instance of " + scanner);
             }
          }
          throw new RuntimeException("No scanner found for type " + type);

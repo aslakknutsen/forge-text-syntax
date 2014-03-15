@@ -63,7 +63,7 @@ public class HTMLScanner implements Scanner {
                                                 .add(new String[] {"style"}, EmbeddedType.style);
    
    @Override
-   public void scan(StringScanner source, Encoder encoder) {
+   public void scan(StringScanner source, Encoder encoder, Map<String, Object> options) {
       State state = State.innitial;
       EmbeddedType in_attribute = null;
       String in_tag = null;
@@ -182,7 +182,10 @@ public class HTMLScanner implements Scanner {
                      // unsupported
                      String code = source.scanUntil(Pattern.compile("(?=" + groupStart + "|\\z)")).group();
                      if(EmbeddedType.style == in_attribute) {
-                        Syntax.scan(code, Scanner.Type.CSS, encoder);
+                        Syntax.Builder.create()
+                           .scannerType(Scanner.Type.CSS)
+                           .encoder(encoder)
+                           .execute(code);
                      }
 
                      //if in_attribute == :script

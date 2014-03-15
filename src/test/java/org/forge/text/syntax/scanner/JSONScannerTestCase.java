@@ -35,7 +35,7 @@ public class JSONScannerTestCase extends AbstractScannerTestCase {
             "   }\n" +
             "]\n";
 
-      Syntax.scan(source, Scanner.Type.JSON.name(), ASSERT_ENCODER, System.out);
+      Syntax.Builder.create().scannerType(Scanner.Type.JSON).encoderType(ASSERT_ENCODER).execute(source);
 
       assertTextToken(TokenType.content, "Zip", "precision");
       assertTextToken(TokenType.content, "zip", "CA", "US");

@@ -22,10 +22,12 @@ public interface Encoder {
       
       protected OutputStream out;
       protected Theme theme;
+      protected Map<String, Object> options;
       
-      public AbstractEncoder(OutputStream out, Theme theme) {
+      public AbstractEncoder(OutputStream out, Theme theme, Map<String, Object> options) {
          this.out = out;
          this.theme = theme;
+         this.options = options;
       }
       
       protected Color color(TokenType type) {
@@ -83,12 +85,12 @@ public interface Encoder {
          instance().registry.put(type, encoder); 
       }
       
-      public static Encoder create(String type, OutputStream out, Theme theme) {
+      public static Encoder create(String type, OutputStream out, Theme theme, Map<String, Object> options) {
          Class<? extends Encoder> encoder = instance().registry.get(type); 
          if(encoder != null) {
             try {
-               Constructor<? extends Encoder> constructor = encoder.getConstructor(OutputStream.class, Theme.class);
-               return constructor.newInstance(out, theme);
+               Constructor<? extends Encoder> constructor = encoder.getConstructor(OutputStream.class, Theme.class, Map.class);
+               return constructor.newInstance(out, theme, options);
             } catch(Exception e) {
                throw new RuntimeException("Could not create new instance of " + encoder);
             }

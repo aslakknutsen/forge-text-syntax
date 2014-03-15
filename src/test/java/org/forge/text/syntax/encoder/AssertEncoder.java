@@ -3,6 +3,7 @@ package org.forge.text.syntax.encoder;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.forge.text.syntax.Theme;
 import org.forge.text.syntax.TokenType;
@@ -10,8 +11,8 @@ import org.junit.Assert;
 
 public class AssertEncoder extends DebugEncoder {
 
-   public AssertEncoder(OutputStream out, Theme theme) {
-      super(out, theme);
+   public AssertEncoder(OutputStream out, Theme theme, Map<String, Object> options) {
+      super(out, theme, options);
       textTokens.clear();
    }
 

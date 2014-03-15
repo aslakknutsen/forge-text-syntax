@@ -48,7 +48,7 @@ public class CSSScannerTestCase extends AbstractScannerTestCase {
             "  content: counter(chapter) \".\" counter(section) \" \";\n" +
             "}\n";
       
-      Syntax.scan(source, Scanner.Type.CSS.name(), ASSERT_ENCODER, System.out);
+      Syntax.Builder.create().scannerType(Scanner.Type.CSS).encoderType(ASSERT_ENCODER).execute(source);
  
       assertTextToken(TokenType.attribute_name, "href");
       assertTextToken(TokenType.directive, "@media");

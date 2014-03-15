@@ -2,11 +2,11 @@ package org.forge.text.syntax;
 
 import java.awt.Color;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import org.forge.text.syntax.encoder.DebugEncoder;
 import org.forge.text.syntax.encoder.TerminalEncoder;
@@ -27,33 +27,99 @@ public class Syntax {
       Encoder.Factory.registrer(Encoder.Type.DEBUG.name(), DebugEncoder.class);
    }
    
-   public static String scan(String source, Scanner.Type scannerType, Encoder.Type encoderType) {
-      return scan(source, scannerType.name(), encoderType.name());
-   }
+   public static final class Builder {
 
-   public static String scan(String source, String scannerType, String encoderType) {
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      scan(source, scannerType, encoderType, out);
-      return out.toString();
-   }
+      private String scannerType;
+      private Scanner scanner;
+      private Map<String, Object> scannerOptions;
 
-   public static void scan(String source, Scanner.Type scannerType, Encoder.Type encoderType, OutputStream out) {
-      scan(source, scannerType.name(), encoderType.name(), out);
-   }
+      private String encoderType;
+      private Encoder encoder;
+      private Map<String, Object> encoderOptions;
 
-   public static void scan(String source, String scannerType, String encoderType, OutputStream out) {
-      Scanner scanner = Scanner.Factory.create(scannerType);
-      Encoder encoder = Encoder.Factory.create(encoderType, out, defaultTheme());
-      scanner.scan(new StringScanner(source), encoder);
-   }
+      private OutputStream output = System.out;
 
-   public static void scan(String source, Scanner.Type scannerType, Encoder encoder) {
-      scan(new StringScanner(source), scannerType, encoder);
-   }
+      private Theme theme = defaultTheme();
 
-   public static void scan(StringScanner source, Scanner.Type scannerType, Encoder encoder) {
-      Scanner scanner = Scanner.Factory.create(scannerType.name());
-      scanner.scan(source, encoder);
+      private Builder() {}
+
+      public static Builder create() {
+         return new Builder();
+      }
+
+      public Builder scannerType(Scanner.Type scannerType) {
+         return scannerType(scannerType.name());
+      }
+
+      public Builder scannerType(String scannerType) {
+         this.scannerType = scannerType;
+         return this;
+      }
+
+      public Builder scanner(Scanner scanner) {
+         this.scanner = scanner;
+         return this;
+      }
+
+      public Builder scannerOptions(Map<String, Object> options) {
+         this.scannerOptions = options;
+         return this;
+      }
+
+      public Builder encoderType(Encoder.Type encoderType) {
+         return encoderType(encoderType.name());
+      }
+
+      public Builder encoderType(String encoderType) {
+         this.encoderType = encoderType;
+         return this;
+      }
+
+      public Builder encoder(Encoder encoder) {
+         this.encoder = encoder;
+         return this;
+      }
+
+      public Builder encoderOptions(Map<String, Object> options) {
+         this.encoderOptions = options;
+         return this;
+      }
+
+      public Builder output(OutputStream output) {
+         this.output = output;
+         return this;
+      }
+
+      public Builder theme(Theme theme) {
+         this.theme = theme;
+         return this;
+      }
+
+      public void execute(String source) {
+         execute(new StringScanner(source));
+      }
+
+      public void execute(StringScanner source) {
+         if(output == null && encoder == null) {
+            throw new IllegalArgumentException("Either output or encoder must be defined");
+         }
+
+         Scanner in = scanner;
+         if(scanner == null) {
+            if(scannerType == null) {
+               throw new IllegalArgumentException("Either input or inputType must be defined");
+            }
+            in = Scanner.Factory.create(scannerType);
+         }
+         Encoder out = encoder;
+         if(encoder == null) {
+            if(encoderType == null) {
+               throw new IllegalArgumentException("Either output or outputType must be defined");
+            }
+            out = Encoder.Factory.create(encoderType, output, theme, encoderOptions == null ? Options.create():encoderOptions);
+         }
+         in.scan(source, out, scannerOptions == null ? Options.create():scannerOptions);
+      }
    }
 
    public static Theme defaultTheme() {
@@ -87,7 +153,12 @@ public class Syntax {
       }
 
       BufferedOutputStream out = new BufferedOutputStream(System.out);
-      scan(content, type, encoder, out);
+      Builder.create()
+         .scannerType(type)
+         .encoderType(encoder)
+         .output(out)
+         .execute(content);
+
       try {
          out.flush();
       } catch (IOException e) { }

@@ -14,7 +14,7 @@ public class HTMLScannerTestCase extends AbstractScannerTestCase {
       
       String source = "<p style=\"float:right;\">#{q.answers.size.to_i} answers</p>";
       
-      Syntax.scan(source, Scanner.Type.HTML.name(), ASSERT_ENCODER, System.out);
+      Syntax.Builder.create().scannerType(Scanner.Type.HTML).encoderType(ASSERT_ENCODER).execute(source);
  
       assertTextToken(TokenType.tag, "<p");
       assertTextToken(TokenType.attribute_name, "style");

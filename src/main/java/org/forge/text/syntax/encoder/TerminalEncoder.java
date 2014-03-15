@@ -2,6 +2,7 @@ package org.forge.text.syntax.encoder;
 
 import java.awt.Color;
 import java.io.OutputStream;
+import java.util.Map;
 
 import org.forge.text.syntax.Encoder;
 import org.forge.text.syntax.Theme;
@@ -9,8 +10,8 @@ import org.forge.text.syntax.TokenType;
 
 public class TerminalEncoder extends Encoder.AbstractEncoder implements Encoder {
 
-   public TerminalEncoder(OutputStream out, Theme theme) {
-      super(out, theme);
+   public TerminalEncoder(OutputStream out, Theme theme, Map<String, Object> options) {
+      super(out, theme, options);
       write(TerminalString.RESET); // reset terminal colors
    }
    
