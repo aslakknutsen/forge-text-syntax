@@ -26,6 +26,20 @@ public class StringScanner {
       return null;
    }
    
+   public MatchResult scanUntil(String pattern) {
+      return scanUntil(Pattern.compile(pattern));
+   }
+
+   public MatchResult scanUntil(Pattern pattern) {
+      Matcher m = pattern.matcher(sequence);
+      if(m.find()) {
+         MatchResult result = StaticMatchResult.freezeFrom(m, sequence);
+         sequence.advance(m.end());
+         return result;
+      }
+      return null;
+   }
+
    public MatchResult check(String pattern) {
       return check(Pattern.compile(pattern));
    }
@@ -71,6 +85,16 @@ public class StringScanner {
          return new StaticMatchResult(sequence, groups);
       }
 
+      public static MatchResult freezeFrom(Matcher m, StringSequence sequence) {
+         int[][] groups = new int[1+m.groupCount()][2];
+         // we want until, so set start to 0
+         groups[0]  = new int[] {0, m.end()};
+         for(int i = 0; i < m.groupCount(); i++) {
+            groups[i+1] = new int[]{m.start(i), m.end(i)};
+         }
+         return new StaticMatchResult(sequence, groups);
+      }
+
       @Override
       public int start() {
          return groups[0][0];
@@ -100,7 +124,11 @@ public class StringScanner {
       @Override
       public String group(int group) {
          int[] pos = groups[group];
-         return sequence.subSequence(previousIndex, pos[0], pos[1]).toString();
+         try {
+            return sequence.subSequence(previousIndex, pos[0], pos[1]).toString();
+         } catch(StringIndexOutOfBoundsException e) {
+            return null; // group was never found
+         }
       }
 
       @Override

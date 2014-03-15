@@ -33,6 +33,21 @@ public class StringScannerTestCase {
       Assert.assertFalse(scan.hasMore());
    }
 
+   @Test
+   public void shouldScanUntil() throws Exception {
+      String test = "aaaabc";
+
+      StringScanner scan = new StringScanner(test);
+      Assert.assertTrue(scan.hasMore());
+
+      Assert.assertEquals("aaaab", scan.scanUntil("b").group());
+
+      Assert.assertTrue(scan.hasMore());
+
+      Assert.assertEquals("c", scan.next());
+      Assert.assertFalse(scan.hasMore());
+   }
+
    @Test @Ignore
    public void should2() throws Exception {
 
