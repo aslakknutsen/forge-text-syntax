@@ -12,7 +12,8 @@ public class JavaScannerTestCase extends AbstractScannerTestCase {
    @Test
    public void should() throws Exception {
       
-      String source = "package pl.silvermedia.ws;\n" +
+      String source = "/***** BEGIN LICENSE BLOCK ***** */\n" +
+            "package pl.silvermedia.ws;\n" +
             "import java.util.List;\n" +
             "\n" +
             "import javax.jws.WebParam;\n" +
@@ -21,19 +22,25 @@ public class JavaScannerTestCase extends AbstractScannerTestCase {
             "@WebService\n" +
             "public interface ContactUsService {\n" +
             "  List<Message> getMessages();\n" +
-            "  Message getFirstMessage();\n" +
-            "    void postMessage(@WebParam(name = \"message\") Message message);\n" +
+            "  Message[] getFirstMessage();\n" +
+            "    void postMessage(@WebParam(name = \"message\") Message message) throws UnsupportedOperationException {\n" +
+            "        if (File.separatorChar == '\\\\') {" +
+            "            bannerText = \"  \" + bannerText + \"  \\n\\n\";\n" +
+            "        }\n" +
+            "    }" +
             "}\n" +
             "";
 
       Syntax.scan(source, Scanner.Type.JAVA.name(), ASSERT_ENCODER, System.out);
 
+      assertTextToken(TokenType.comment, "/***** BEGIN LICENSE BLOCK ***** */");
       assertTextToken(TokenType.namespace, "pl.silvermedia.ws");
       assertTextToken(TokenType.predefined_type, "List");
-      //assertTextToken(TokenType.exception, "ZipException");
+      assertTextToken(TokenType.exception, "UnsupportedOperationException");
       assertTextToken(TokenType.keyword, "import");
-      assertTextToken(TokenType.type, "void", "interface");
+      assertTextToken(TokenType.type, "void", "interface", "[]");
       assertTextToken(TokenType.directive, "public");
       assertTextToken(TokenType.content, "message");
+      assertTextToken(TokenType.char_, "\\n", "\\\\");
    }
 }

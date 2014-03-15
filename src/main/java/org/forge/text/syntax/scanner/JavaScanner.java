@@ -19,7 +19,7 @@ import org.forge.text.syntax.scanner.java.BuiltInTypes;
 public class JavaScanner implements Scanner {
 
    public static final Pattern SPACE = Pattern.compile("\\s+|\\n");
-   public static final Pattern COMMENT = Pattern.compile("[^\\n\\\\]* (?: \\\\. [^\\n\\\\]* )* | /\\* (?: .*? \\*/ | .* ) !mx");
+   public static final Pattern COMMENT = Pattern.compile("// [^\\n\\\\]* (?: \\\\. [^\\n\\\\]* )* | /\\* (?: .*? \\*/ | .* )", Pattern.DOTALL|Pattern.COMMENTS);
    public static final Pattern IDENT   = Pattern.compile("[a-zA-Z_][A-Za-z_0-9]*");
    public static final Pattern OPERATORS = Pattern.compile("\\.(?!\\d)|[,?:()\\[\\]}]|--|\\+\\+|&&|\\|\\||\\*\\*=?|[-+*\\/%^~&|<>=!]=?|<<<?=?|>>>?=?");
    public static final Pattern STRING_CONTENT_PATTERN_SINGLE = Pattern.compile("[^\\\\']+");
@@ -39,7 +39,7 @@ public class JavaScanner implements Scanner {
    public static final Pattern INTEGER = Pattern.compile("\\d+[lL]?");
    public static final Pattern START_STRING = Pattern.compile("[\"']");
    public static final Pattern END_STRING = Pattern.compile("[\"'\\/]");
-   public static final Pattern STRING_CONTENT = Pattern.compile("/\\\\(?:" + ESCAPE.pattern() +"|" + UNICODE_ESCAPE.pattern() + ")", Pattern.DOTALL);
+   public static final Pattern STRING_CONTENT = Pattern.compile("\\\\(?:" + ESCAPE.pattern() +"|" + UNICODE_ESCAPE.pattern() + ")", Pattern.DOTALL);
    public static final Pattern STRING_CONTENT_2 = Pattern.compile("\\\\.", Pattern.DOTALL);
    public static final Pattern END_GROUP = Pattern.compile("\\\\|$");
    
@@ -60,7 +60,7 @@ public class JavaScanner implements Scanner {
                                              "this", "super"};
    public static final String[] TYPES = new String[] {
                                              "boolean", "byte", "char", "class", "double", "enum", "float", "int",
-                                             "interface", "long", "short", "void"}; // missing int[]
+                                             "interface", "long", "short", "void", "[]"};
    public static final String[] DIRECTIVES = new String[] {
                                              "abstract", "extends", "final", "implements", "native", "private",
                                              "protected", "public", "static", "strictfp", "synchronized", "throws",
@@ -72,8 +72,8 @@ public class JavaScanner implements Scanner {
                                              .add(CONSTANTS, TokenType.predefined_constant)
                                              .add(MAGIC_VARIABLES, TokenType.local_variable)
                                              .add(TYPES, TokenType.type)
-                                             .add(BuiltInTypes.PREDEFINED_TYPES, TokenType.predefined_type)
                                              .add(BuiltInTypes.EXCEPTION_TYPES, TokenType.exception)
+                                             .add(BuiltInTypes.PREDEFINED_TYPES, TokenType.predefined_type)
                                              .add(DIRECTIVES, TokenType.directive);
 
    public static final Map<String, Pattern> STRING_CONTENT_PATTERN = new HashMap<String, Pattern>(); 
@@ -175,7 +175,7 @@ public class JavaScanner implements Scanner {
                string_delimiter = null;
             }
             else if( state == State.string && (m = source.scan(STRING_CONTENT)) != null) {
-               if("'".equals(string_delimiter) && !("\\\"".equals(m.group()) || "\\'".equals(m.group())) ) {
+               if("'".equals(string_delimiter) && !("\\\\".equals(m.group()) || "\\'".equals(m.group())) ) {
                   encoder.textToken(m.group(), TokenType.content);
                } else {
                   encoder.textToken(m.group(), TokenType.char_);

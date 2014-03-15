@@ -77,7 +77,11 @@ public class Syntax {
          throw new RuntimeException("Could not read given file " + fileName, e);
       }
 
-      scan(content, type, encoder, new BufferedOutputStream(System.out));
+      BufferedOutputStream out = new BufferedOutputStream(System.out);
+      scan(content, type, encoder, out);
+      try {
+         out.flush();
+      } catch (IOException e) { }
    }
 
    private static Scanner.Type determineType(String fileName) {

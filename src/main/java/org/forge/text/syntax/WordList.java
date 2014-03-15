@@ -1,8 +1,8 @@
 package org.forge.text.syntax;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,7 +13,7 @@ public class WordList<T> {
    
    public WordList(T defaultValue) {
       this.defaultValue = defaultValue;
-      this.lists = new HashMap<T, Set<String>>();
+      this.lists = new LinkedHashMap<T, Set<String>>();
    }
    
    public WordList<T> add(String[] list, T type) {
