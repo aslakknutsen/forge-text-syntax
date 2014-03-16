@@ -4,8 +4,8 @@ import static org.forge.text.syntax.encoder.AssertEncoder.assertTextToken;
 
 import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.Syntax;
-import org.forge.text.syntax.TokenType;
 import org.forge.text.syntax.Syntax.Builder;
+import org.forge.text.syntax.TokenType;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -75,7 +75,7 @@ public class HTMLScannerTestCase extends AbstractScannerTestCase {
             .scannerType(Scanner.Type.HTML), "html", "tolkien.in.html");
    }
 
-   @Test @Ignore // Not currently handling script tags as JavaScript
+   @Test
    public void shoulMatchTPuthTagsExample() throws Exception {
       assertMatchExample(
             Builder.create()

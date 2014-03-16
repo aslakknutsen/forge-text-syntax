@@ -59,7 +59,7 @@ public class HTMLScanner implements Scanner {
       attribute_value_string
    }
    
-   public static final WordList<EmbeddedType> IN_ATTRIBUTE = new WordList<EmbeddedType>(null)
+   public static final WordList<EmbeddedType> IN_ATTRIBUTE = new WordList<EmbeddedType>(null, true)
                                                 .add(EVENT_ATTRIBUTES, EmbeddedType.script)
                                                 .add(new String[] {"style"}, EmbeddedType.style);
    
