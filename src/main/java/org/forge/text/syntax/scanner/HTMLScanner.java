@@ -180,23 +180,22 @@ public class HTMLScanner implements Scanner {
                      if( (m = source.scan("javascript:[ \\t]*")) != null ) {
                         encoder.textToken(m.group(), TokenType.comment);
                      }
-                     // unsupported
                      String code = source.scanUntil(Pattern.compile("(?=" + groupStart + "|\\z)")).group();
-                     if(EmbeddedType.style == in_attribute) {
+                     if(EmbeddedType.script == in_attribute) {
+                        Syntax.Builder.create()
+                           .scannerType(Scanner.Type.JAVA_SCRIPT)
+                           .encoder(encoder)
+                           .execute(code);
+                     }
+                     else {
                         Syntax.Builder.create()
                            .scannerType(Scanner.Type.CSS)
                            .encoder(encoder)
                            .scannerOptions(
-                                 Options.create()
-                                 .add(CSSScanner.OPTION_START_STATE, CSSScanner.State.block))
+                              Options.create()
+                              .add(CSSScanner.OPTION_START_STATE, CSSScanner.State.block))
                            .execute(code);
                      }
-
-                     //if in_attribute == :script
-                     // scan_java_script encoder, code
-                     // else
-                     // scan_css encoder, code, [:block]
-                     //end
                      m = source.scan("[\"']");
                      if(m != null) {
                         encoder.textToken(m.group(), TokenType.delimiter);
@@ -265,13 +264,16 @@ public class HTMLScanner implements Scanner {
                   if(code != null && !code.isEmpty()) {
                      encoder.beginGroup(TokenType.inline);
                      if("script".equalsIgnoreCase(in_tag)) {
-                        //scan_java_script encoder, code
+                        Syntax.Builder.create()
+                           .scannerType(Scanner.Type.JAVA_SCRIPT)
+                           .encoder(encoder)
+                           .execute(code);
                      }
                      else {
                         Syntax.Builder.create()
-                        .scannerType(Scanner.Type.CSS)
-                        .encoder(encoder)
-                        .execute(code);
+                           .scannerType(Scanner.Type.CSS)
+                           .encoder(encoder)
+                           .execute(code);
                      }
                      encoder.endGroup(TokenType.inline);
                   }

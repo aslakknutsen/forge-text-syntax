@@ -47,14 +47,14 @@ public class HTMLScannerTestCase extends AbstractScannerTestCase {
             .scannerType(Scanner.Type.HTML), "html", "cdata.in.html");
    }
 
-   @Test @Ignore // Not currently handling script tags as JavaScript
+   @Test
    public void shoulMatchHTMLCoderayOutputExample() throws Exception {
       assertMatchExample(
             Builder.create()
             .scannerType(Scanner.Type.HTML), "html", "coderay-output.in.html");
    }
 
-   @Test @Ignore // Not currently handling script tags as JavaScript
+   @Test
    public void shoulMatchHTMLRedmineExample() throws Exception {
       assertMatchExample(
             Builder.create()
@@ -68,7 +68,7 @@ public class HTMLScannerTestCase extends AbstractScannerTestCase {
             .scannerType(Scanner.Type.HTML), "html", "tags.in.html");
    }
 
-   @Test @Ignore // Not currently handling script tags as JavaScript
+   @Test
    public void shoulMatchTolkienTagsExample() throws Exception {
       assertMatchExample(
             Builder.create()
