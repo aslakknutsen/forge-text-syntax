@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class StringScanner {
 
-   StringSequence sequence;
+   private StringSequence sequence;
          
    public StringScanner(String source) {
       this.sequence = new StringSequence(source);
@@ -19,7 +19,7 @@ public class StringScanner {
    public MatchResult scan(Pattern pattern) {
       Matcher m = pattern.matcher(sequence);
       if(m.lookingAt()) {
-         MatchResult result = StaticMatchResult.freeze(m, sequence);
+         MatchResult result = new StaticMatchResult(sequence, m);
          sequence.advance(m.end());
          return result;
       }
@@ -33,7 +33,7 @@ public class StringScanner {
    public MatchResult scanUntil(Pattern pattern) {
       Matcher m = pattern.matcher(sequence);
       if(m.find()) {
-         MatchResult result = StaticMatchResult.freezeFrom(m, sequence);
+         MatchResult result = new UntilStaticMatchResult(sequence, m);
          sequence.advance(m.end());
          return result;
       }
@@ -47,7 +47,7 @@ public class StringScanner {
    public MatchResult check(Pattern pattern) {
       Matcher m = pattern.matcher(sequence);
       if(m.lookingAt()) {
-         return StaticMatchResult.freeze(m, sequence);
+         return new StaticMatchResult(sequence, m);
       }
       return null;
    }
@@ -64,79 +64,109 @@ public class StringScanner {
       return sequence.peek(length);
    }
 
-   public static class StaticMatchResult implements MatchResult {
+   private static class StaticMatchResult implements MatchResult {
 
-      private StringSequence sequence;
-      private int previousIndex;
-      private int[][] groups;
+      protected StringSequence sequence;
+      protected int previousIndex;
+      protected MatchResult originalMatch;
 
-      private StaticMatchResult(StringSequence sequence, int[][] groups) {
-         this.groups = groups;
+      public StaticMatchResult(StringSequence sequence, MatchResult result) {
+         this.originalMatch = result;
          this.sequence = sequence;
          this.previousIndex = sequence.index();
       }
 
-      public static MatchResult freeze(Matcher m, StringSequence sequence) {
-         int[][] groups = new int[1+m.groupCount()][2];
-         groups[0]  = new int[] {m.start(), m.end()};
-         for(int i = 1; i < m.groupCount()+1; i++) {
-            groups[i] = new int[]{m.start(i), m.end(i)};
-         }
-         return new StaticMatchResult(sequence, groups);
-      }
-
-      public static MatchResult freezeFrom(Matcher m, StringSequence sequence) {
-         int[][] groups = new int[1+m.groupCount()][2];
-         // we want until, so set start to 0
-         groups[0]  = new int[] {0, m.end()};
-         for(int i = 1; i < m.groupCount()+1; i++) {
-            groups[i] = new int[]{m.start(i), m.end(i)};
-         }
-         return new StaticMatchResult(sequence, groups);
-      }
-
-      @Override
-      public int start() {
-         return groups[0][0];
-      }
-
-      @Override
-      public int start(int group) {
-         return groups[group][0];
-      }
-
       @Override
       public int end() {
-         return groups[0][1];
+         return originalMatch.end();
       }
 
       @Override
       public int end(int group) {
-         return groups[group][1];
-      }
-
-      @Override
-      public String group() {
-         int[] pos = groups[0];
-         return sequence.subSequence(previousIndex, pos[0], pos[1]).toString();
-      }
-
-      @Override
-      public String group(int group) {
-         int[] pos = groups[group];
-         if(pos[0] == -1) {
-            return null;
-         }
-         return sequence.subSequence(previousIndex, pos[0], pos[1]).toString();
+         return originalMatch.end(group);
       }
 
       @Override
       public int groupCount() {
-         return groups.length-1;
+         return originalMatch.groupCount();
+      }
+
+      @Override
+      public int start() {
+         return originalMatch.start();
+      }
+
+      @Override
+      public int start(int group) {
+         return originalMatch.start(group);
+      }
+
+      @Override
+      public String group() {
+         int start = originalMatch.start();
+         if(start == -1) {
+            return null;
+         }
+         int end = originalMatch.end();
+         return (String)sequence.subSequence(previousIndex, start, end);
+      }
+
+      @Override
+      public String group(int group) {
+         int start = originalMatch.start(group);
+         if(start == -1) {
+            return null;
+         }
+         int end = originalMatch.end(group);
+         return (String)sequence.subSequence(previousIndex, start, end);
       }
    }
 
-   public static class StringSequence implements CharSequence {
+   /*
+    * group(0) start is always 0. We want from previous up til next, not from next.
+    *
+    */
+   private static class UntilStaticMatchResult extends StaticMatchResult {
+
+      public UntilStaticMatchResult(StringSequence sequence, MatchResult result) {
+         super(sequence, result);
+      }
+
+      @Override
+      public int start() {
+         return 0;
+      }
+
+      @Override
+      public int start(int group) {
+         if(group == 0) {
+            return 0;
+         }
+         return originalMatch.start(group);
+      }
+
+      @Override
+      public String group() {
+         int start = 0;
+         int end = originalMatch.end();
+         return (String)sequence.subSequence(previousIndex, start, end);
+      }
+
+      @Override
+      public String group(int group) {
+         int start = originalMatch.start(group);
+         if(start == -1) {
+            return null;
+         }
+         if(group == 0) {
+            start = 0;
+         }
+         int end = originalMatch.end(group);
+         return (String)sequence.subSequence(previousIndex, start, end);
+      }
+   }
+
+   private static class StringSequence implements CharSequence {
       private String source;
 
       private int index;
