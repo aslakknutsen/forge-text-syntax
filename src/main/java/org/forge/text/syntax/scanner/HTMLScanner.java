@@ -38,6 +38,25 @@ public class HTMLScanner implements Scanner {
    public static final Pattern HEX = Pattern.compile("[0-9a-fA-F]");
    public static final Pattern ENTITY = Pattern.compile("&(?:\\w+|\\#(?:\\d+|x" + HEX.pattern() + "+));");
    
+   public static final Pattern SPACE = Pattern.compile("\\s+", Pattern.DOTALL);
+   public static final Pattern CDATA_START = Pattern.compile("<!\\[CDATA\\[");
+   public static final Pattern CDATA_END = Pattern.compile(".*?\\]\\]>", Pattern.DOTALL);
+   public static final Pattern CDATA_ERROR = Pattern.compile(".+");
+   public static final Pattern COMMENT = Pattern.compile("<!--(?:.*?-->|.*)", Pattern.DOTALL);
+   public static final Pattern DOCTYPE = Pattern.compile("<!(\\w+)(?:.*?>|.*)|\\]>", Pattern.DOTALL);
+   public static final Pattern PRE_PROCESSOR = Pattern.compile("<\\?xml(?:.*?\\?>|.*)");
+   public static final Pattern COMMENT2 = Pattern.compile("<\\?(?:.*?\\?>|.*)", Pattern.DOTALL);
+   public static final Pattern TAG = Pattern.compile("<\\/[-\\w.:]*>?", Pattern.DOTALL);
+   public static final Pattern SPECIAL_TAG = Pattern.compile("<(?:(script|style)|[-\\w.:]+)(>)?", Pattern.DOTALL);
+   public static final Pattern PLAIN = Pattern.compile("[^<>&]+");
+   public static final Pattern ERROR = Pattern.compile("[<>&]");
+   public static final Pattern EQUAL = Pattern.compile("=");
+   public static final Pattern QUOTE = Pattern.compile("[\"']");
+   public static final Pattern JAVASCRIPT_INLINE = Pattern.compile("javascript:[ \\t]*");
+   public static final Pattern AMP = Pattern.compile("&");
+   public static final Pattern END = Pattern.compile("[\\n>]");
+   public static final Pattern SPECIAL_SPACE = Pattern.compile("[ \\t]*\\n");
+   public static final Pattern SPECIAL_COMMENT = Pattern.compile("(\\s*<!--)(?:(.*?)(-->)|(.*))", Pattern.DOTALL);
    
    public static final Map<String, Pattern> PLAIN_STRING_CONTENT = new HashMap<String, Pattern>(); 
    {
@@ -73,7 +92,7 @@ public class HTMLScanner implements Scanner {
       while(source.hasMore()) {
          MatchResult m = null;
       
-         if( state != State.in_special_tag && (m = source.scan(Pattern.compile("\\s+", Pattern.DOTALL))) != null) {
+         if( state != State.in_special_tag && (m = source.scan(SPACE)) != null) {
             encoder.textToken(m.group(), TokenType.space);
          }
          else {
@@ -81,33 +100,33 @@ public class HTMLScanner implements Scanner {
             switch (state) {
             case innitial:
                
-               if( (m = source.scan("<!\\[CDATA\\[")) != null ) {
+               if( (m = source.scan(CDATA_START)) != null ) {
                   encoder.textToken(m.group(), TokenType.inline_delimiter);
-                  if( (m = source.scan(Pattern.compile(".*?\\]\\]>", Pattern.DOTALL))) != null) {
+                  if( (m = source.scan(CDATA_END)) != null) {
                      encoder.textToken(m.group().substring(0, m.group().length()-4), TokenType.plain);
                      encoder.textToken("]]>", TokenType.inline_delimiter);
                   }
-                  else if( (m = source.scan(".+")) != null ) {
+                  else if( (m = source.scan(CDATA_ERROR)) != null ) {
                      encoder.textToken(m.group(), TokenType.error);
                   }
                }
-               else if( (m = source.scan(Pattern.compile("<!--(?:.*?-->|.*)", Pattern.DOTALL))) != null ) {
+               else if( (m = source.scan(COMMENT)) != null ) {
                   encoder.textToken(m.group(), TokenType.comment);
                }
-               else if( (m = source.scan(Pattern.compile("<!(\\w+)(?:.*?>|.*)|\\]>", Pattern.DOTALL))) != null ) {
+               else if( (m = source.scan(DOCTYPE)) != null ) {
                   encoder.textToken(m.group(), TokenType.doctype);
                }
-               else if( (m = source.scan("<\\?xml(?:.*?\\?>|.*)")) != null ) {
+               else if( (m = source.scan(PRE_PROCESSOR)) != null ) {
                   encoder.textToken(m.group(), TokenType.preprocessor);
                }
-               else if( (m = source.scan(Pattern.compile("<\\?(?:.*?\\?>|.*)", Pattern.DOTALL))) != null ) {
+               else if( (m = source.scan(COMMENT2)) != null ) {
                   encoder.textToken(m.group(), TokenType.comment);
                }
-               else if( (m = source.scan(Pattern.compile("<\\/[-\\w.:]*>?", Pattern.DOTALL))) != null ) {
+               else if( (m = source.scan(TAG)) != null ) {
                   in_tag = null;
                   encoder.textToken(m.group(), TokenType.tag);
                }
-               else if( (m = source.scan(Pattern.compile("<(?:(script|style)|[-\\w.:]+)(>)?", Pattern.DOTALL))) != null ) {
+               else if( (m = source.scan(SPECIAL_TAG)) != null ) {
                   encoder.textToken(m.group(), TokenType.tag);
                   in_tag = m.group(1);
                   if(m.group(2) != null) {
@@ -119,13 +138,13 @@ public class HTMLScanner implements Scanner {
                      state = State.attribute;
                   }
                }
-               else if( (m = source.scan("[^<>&]+")) != null ) {
+               else if( (m = source.scan(PLAIN)) != null ) {
                   encoder.textToken(m.group(), TokenType.plain);
                }
                else if( (m = source.scan(ENTITY)) != null ) {
                   encoder.textToken(m.group(), TokenType.entity);
                }
-               else if( (m = source.scan("[<>&]")) != null ) {
+               else if( (m = source.scan(ERROR)) != null ) {
                   in_tag = null;
                   encoder.textToken(m.group(), TokenType.error);
                }
@@ -158,7 +177,7 @@ public class HTMLScanner implements Scanner {
                break;
             case attribute_equal:
                
-               if( (m = source.scan("=")) != null ) {
+               if( (m = source.scan(EQUAL)) != null ) {
                   encoder.textToken(m.group(), TokenType.operator);
                   state = State.attribute_value;
                }
@@ -171,13 +190,13 @@ public class HTMLScanner implements Scanner {
                if( (m = source.scan(ATTR_NAME)) != null ) {
                  encoder.textToken(m.group(), TokenType.attribute_value);
                  state = State.attribute;
-               } else if( (m = source.scan("[\"']")) != null ) {
+               } else if( (m = source.scan(QUOTE)) != null ) {
                   if(EmbeddedType.script == in_attribute || EmbeddedType.style == in_attribute) {
                      encoder.beginGroup(TokenType.string);
                      encoder.textToken(m.group(), TokenType.delimiter);
                      String groupStart = m.group();
 
-                     if( (m = source.scan("javascript:[ \\t]*")) != null ) {
+                     if( (m = source.scan(JAVASCRIPT_INLINE)) != null ) {
                         encoder.textToken(m.group(), TokenType.comment);
                      }
                      String code = source.scanUntil(Pattern.compile("(?=" + groupStart + "|\\z)")).group();
@@ -196,7 +215,7 @@ public class HTMLScanner implements Scanner {
                               .add(CSSScanner.OPTION_START_STATE, CSSScanner.State.block))
                            .execute(code);
                      }
-                     m = source.scan("[\"']");
+                     m = source.scan(QUOTE);
                      if(m != null) {
                         encoder.textToken(m.group(), TokenType.delimiter);
                      }
@@ -224,7 +243,7 @@ public class HTMLScanner implements Scanner {
                if( (m = source.scan(plain_string_content)) != null ) {
                   encoder.textToken(m.group(), TokenType.content);
                }
-               else if( (m = source.scan("['\"]")) != null ) {
+               else if( (m = source.scan(QUOTE)) != null ) {
                   encoder.textToken(m.group(), TokenType.delimiter);
                   encoder.endGroup(TokenType.string);
                   state = State.attribute;
@@ -232,10 +251,10 @@ public class HTMLScanner implements Scanner {
                else if( (m = source.scan(ENTITY)) != null ) {
                   encoder.textToken(m.group(), TokenType.entity);
                }
-               else if( (m = source.scan("&")) != null ) {
+               else if( (m = source.scan(AMP)) != null ) {
                   encoder.textToken(m.group(), TokenType.content);
                }
-               else if( (m = source.scan("[\\n>]")) != null ) {
+               else if( (m = source.scan(END)) != null ) {
                   encoder.endGroup(TokenType.string);
                   state = State.innitial;
                   encoder.textToken(m.group(), TokenType.error);
@@ -246,10 +265,10 @@ public class HTMLScanner implements Scanner {
                if("script".equalsIgnoreCase(in_tag) || "style".equalsIgnoreCase(in_tag)) {
                   String code = null;
                   String closing = null;
-                  if( (m = source.scan("[ \\t]*\\n")) != null ) {
+                  if( (m = source.scan(SPECIAL_SPACE)) != null ) {
                      encoder.textToken(m.group(), TokenType.space);
                   }
-                  if( (m = source.scan(Pattern.compile("(\\s*<!--)(?:(.*?)(-->)|(.*))", Pattern.DOTALL))) != null ) {
+                  if( (m = source.scan(SPECIAL_COMMENT)) != null ) {
                      code = m.group(2);
                      if(code == null) {
                         code = m.group(4);
