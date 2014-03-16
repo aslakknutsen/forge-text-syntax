@@ -1,5 +1,6 @@
 package org.forge.text.syntax.scanner;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,25 +28,25 @@ public abstract class AbstractScannerTestCase {
    public static String BASE_URL = "https://raw.github.com/rubychan/coderay-scanner-tests/master/";
    public static Pattern MATCH_DATA = Pattern.compile("(.*)\\..*\\..*");
 
-   public static String fetch(String type, String example) throws Exception {
+   protected String fetch(String type, String example) throws Exception {
       Path sourcePath = Paths.get(OUTPUT, type, example);
       if(!Files.exists(sourcePath)) {
          sourcePath.getParent().toFile().mkdirs();
          URL source = new URL(BASE_URL + type + "/" + example);
          System.out.println("Fetching " + source);
-         Files.write(sourcePath, asByteArray(source.openStream()), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+         Files.write(sourcePath, asByteArray(new BufferedInputStream(source.openStream())), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
       }
       return new String(Files.readAllBytes(sourcePath));
    }
 
-   private static String expectedName(String example) {
+   private String expectedName(String example) {
       Matcher result = MATCH_DATA.matcher(example);
       result.find();
 
       return result.group(1) + ".expected.raydebug";
    }
 
-   public void assertMatchExample(Syntax.Builder builder, String type, String exampleName) throws Exception {
+   protected void assertMatchExample(Syntax.Builder builder, String type, String exampleName) throws Exception {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
 
       String exampleContent = fetch(type, exampleName);
