@@ -18,6 +18,16 @@ public class JSONScanner implements Scanner {
    public static final Pattern ESCAPE = Pattern.compile("[bfnrt\\\\\"\\/]");
    public static final Pattern UNICODE_ESCAPE = Pattern.compile("u[a-fA-F0-9]{4}");
    public static final Pattern KEY = Pattern.compile("(?>(?:[^\\\\\"]+|\\\\.)*)\"\\s*:");
+   public static final Pattern SPACE = Pattern.compile("\\s+");
+   public static final Pattern DOUBLE_QUOTE = Pattern.compile("\"");
+   public static final Pattern OPERATOR = Pattern.compile("[:,\\[{\\]}]");
+   public static final Pattern BOOLEAN = Pattern.compile("true|false|null");
+   public static final Pattern NUMBER = Pattern.compile("-?(?:0|[1-9]\\d*)");
+   public static final Pattern FLOAT = Pattern.compile("\\.\\d+(?:[eE][-+]?\\d+)?|[eE][-+]?\\d+");
+   public static final Pattern CONTENT = Pattern.compile("[^\\\\\"]+");
+   public static final Pattern CONTENT_2 = Pattern.compile("\\\\.", Pattern.DOTALL);
+   public static final Pattern CHAR = Pattern.compile("\\\\(?:" + ESCAPE.pattern()+ "|" + UNICODE_ESCAPE.pattern() + ")", Pattern.DOTALL);
+   public static final Pattern END = Pattern.compile("\\\\|$");
    
    public enum State {
       initial,
@@ -35,23 +45,23 @@ public class JSONScanner implements Scanner {
          switch (state) {
          
          case initial:
-            if( (m = source.scan("\\s+")) != null ) {
+            if( (m = source.scan(SPACE)) != null ) {
                encoder.textToken(m.group(), TokenType.space);
             }
-            else if( (m = source.scan("\"")) != null ) {
+            else if( (m = source.scan(DOUBLE_QUOTE)) != null ) {
                state = source.check(KEY) != null ? State.key:State.string;
                encoder.beginGroup(TokenType.valueOf(state.name()));
                encoder.textToken(m.group(), TokenType.delimiter);
              }
-            else if( (m = source.scan("[:,\\[{\\]}]")) != null ) {
+            else if( (m = source.scan(OPERATOR)) != null ) {
                encoder.textToken(m.group(), TokenType.operator);
             }
-            else if( (m = source.scan("true|false|null")) != null ) {
+            else if( (m = source.scan(BOOLEAN)) != null ) {
                encoder.textToken(m.group(), TokenType.value);
             }
-            else if( (m = source.scan("-?(?:0|[1-9]\\d*)")) != null ) {
+            else if( (m = source.scan(NUMBER)) != null ) {
                String match = m.group();
-               if( (m = source.scan("\\.\\d+(?:[eE][-+]?\\d+)?|[eE][-+]?\\d+")) != null ) {
+               if( (m = source.scan(FLOAT)) != null ) {
                   match = match + m.group();
                   encoder.textToken(match, TokenType.float_);
                }
@@ -65,21 +75,21 @@ public class JSONScanner implements Scanner {
          case key:
          case string:
             
-            if( (m = source.scan("[^\\\\\"]+")) != null ) {
+            if( (m = source.scan(CONTENT)) != null ) {
                encoder.textToken(m.group(), TokenType.content);
             }
-            else if( (m = source.scan("\"")) != null ) {
+            else if( (m = source.scan(DOUBLE_QUOTE)) != null ) {
                encoder.textToken(m.group(), TokenType.delimiter);
                encoder.endGroup(TokenType.valueOf(state.name()));
                state = State.initial;
             }
-            else if( (m = source.scan(Pattern.compile("\\\\(?:" + ESCAPE.pattern()+ "|" + UNICODE_ESCAPE.pattern() + ")", Pattern.DOTALL))) != null ) {
+            else if( (m = source.scan(CHAR)) != null ) {
                encoder.textToken(m.group(), TokenType.char_);
             }
-            else if( (m = source.scan(Pattern.compile("\\\\.", Pattern.DOTALL))) != null ) {
+            else if( (m = source.scan(CONTENT_2)) != null ) {
                encoder.textToken(m.group(), TokenType.content);
             }
-            else if( (m = source.scan("\\\\|$")) != null ) {
+            else if( (m = source.scan(END)) != null ) {
                encoder.endGroup(TokenType.valueOf(state.name()));
                if(!m.group().isEmpty()) {
                   encoder.textToken(m.group(), TokenType.error);
