@@ -14,6 +14,7 @@ import org.forge.text.syntax.scanner.CSSScanner;
 import org.forge.text.syntax.scanner.HTMLScanner;
 import org.forge.text.syntax.scanner.JSONScanner;
 import org.forge.text.syntax.scanner.JavaScanner;
+import org.forge.text.syntax.scanner.JavaScriptScanner;
 
 public class Syntax {
 
@@ -21,6 +22,7 @@ public class Syntax {
       Scanner.Factory.registrer(Scanner.Type.JAVA.name(), JavaScanner.class);
       Scanner.Factory.registrer(Scanner.Type.HTML.name(), HTMLScanner.class);
       Scanner.Factory.registrer(Scanner.Type.CSS.name(), CSSScanner.class);
+      Scanner.Factory.registrer(Scanner.Type.JAVA_SCRIPT.name(), JavaScriptScanner.class);
       Scanner.Factory.registrer(Scanner.Type.JSON.name(), JSONScanner.class);
       
       Encoder.Factory.registrer(Encoder.Type.TERMINAL.name(), TerminalEncoder.class);

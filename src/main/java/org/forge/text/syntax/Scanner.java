@@ -5,7 +5,7 @@ import java.util.Map;
 
 public interface Scanner {
    
-   public enum Type { JAVA, HTML, CSS, JSON }
+   public enum Type { JAVA, HTML, CSS, JAVA_SCRIPT, JSON }
    
    void scan(StringScanner source, Encoder encoder, Map<String, Object> options);
    
