@@ -164,8 +164,8 @@ public class HTMLScanner implements Scanner {
                }
                else {
                   state = State.attribute;
+                  break;
                }
-               break;
 
             case attribute_value:
                if( (m = source.scan(ATTR_NAME)) != null ) {
@@ -259,7 +259,7 @@ public class HTMLScanner implements Scanner {
                      encoder.textToken(m.group(1), TokenType.comment);
                   }
                   else {
-                     // code = scan_until(/(?=(?:\n\s*)?<\/#{in_tag}>)|\z/)
+                     code = source.scanUntil("(?=(?:\\n\\s*)?<\\/" + in_tag + ">)|\\z").group();
                      closing = null;
                   }
                   if(code != null && !code.isEmpty()) {
@@ -268,7 +268,10 @@ public class HTMLScanner implements Scanner {
                         //scan_java_script encoder, code
                      }
                      else {
-                        //scan_css encoder, code
+                        Syntax.Builder.create()
+                        .scannerType(Scanner.Type.CSS)
+                        .encoder(encoder)
+                        .execute(code);
                      }
                      encoder.endGroup(TokenType.inline);
                   }

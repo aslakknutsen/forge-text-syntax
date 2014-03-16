@@ -6,6 +6,7 @@ import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.TokenType;
 import org.forge.text.syntax.Syntax.Builder;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class HTMLScannerTestCase extends AbstractScannerTestCase {
@@ -30,5 +31,54 @@ public class HTMLScannerTestCase extends AbstractScannerTestCase {
       assertMatchExample(
             Builder.create()
             .scannerType(Scanner.Type.HTML), "html", "boolean.in.html");
+   }
+
+   @Test
+   public void shoulMatchHTMLAmpersandExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "html", "ampersand.in.html");
+   }
+
+   @Test @Ignore // Not currently handling script tags as JavaScript
+   public void shoulMatchHTMLCDataExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "html", "cdata.in.html");
+   }
+
+   @Test @Ignore // Not currently handling script tags as JavaScript
+   public void shoulMatchHTMLCoderayOutputExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "html", "coderay-output.in.html");
+   }
+
+   @Test @Ignore // Not currently handling script tags as JavaScript
+   public void shoulMatchHTMLRedmineExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "html", "redmine.in.html");
+   }
+
+   @Test
+   public void shoulMatchHTMLTagsExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "html", "tags.in.html");
+   }
+
+   @Test @Ignore // Not currently handling script tags as JavaScript
+   public void shoulMatchTolkienTagsExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "html", "tolkien.in.html");
+   }
+
+   @Test @Ignore // Not currently handling script tags as JavaScript
+   public void shoulMatchTPuthTagsExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "html", "tputh.in.html");
    }
 }
