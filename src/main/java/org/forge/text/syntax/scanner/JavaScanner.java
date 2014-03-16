@@ -72,8 +72,8 @@ public class JavaScanner implements Scanner {
                                              .add(CONSTANTS, TokenType.predefined_constant)
                                              .add(MAGIC_VARIABLES, TokenType.local_variable)
                                              .add(TYPES, TokenType.type)
-                                             .add(BuiltInTypes.EXCEPTION_TYPES, TokenType.exception)
                                              .add(BuiltInTypes.PREDEFINED_TYPES, TokenType.predefined_type)
+                                             .add(BuiltInTypes.EXCEPTION_TYPES, TokenType.exception)
                                              .add(DIRECTIVES, TokenType.directive);
 
    public static final Map<String, Pattern> STRING_CONTENT_PATTERN = new HashMap<String, Pattern>(); 
