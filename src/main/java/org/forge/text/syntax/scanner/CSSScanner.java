@@ -20,47 +20,50 @@ import org.forge.text.syntax.TokenType;
  */
 public class CSSScanner implements Scanner {
 
-   public static final Pattern HEX = Pattern.compile("[0-9a-fA-F]");
-   public static final Pattern UNICODE = Pattern.compile("\\\\" + HEX.pattern() + "{1,6}\\b");
-   public static final Pattern ESCAPE = Pattern.compile(UNICODE.pattern() + "|\\\\[^\\n0-9a-fA-F]");
-   public static final Pattern NMChar = Pattern.compile("[-_a-zA-Z0-9]");
-   public static final Pattern NMStart = Pattern.compile("[_a-zA-Z]");
+   private static final Pattern HEX = Pattern.compile("[0-9a-fA-F]");
+   private static final Pattern UNICODE = Pattern.compile("\\\\" + HEX.pattern() + "{1,6}\\b");
+   private static final Pattern ESCAPE = Pattern.compile(UNICODE.pattern() + "|\\\\[^\\n0-9a-fA-F]");
+   private static final Pattern NM_CHAR = Pattern.compile("[-_a-zA-Z0-9]");
+   private static final Pattern NM_START = Pattern.compile("[_a-zA-Z]");
 
-   public static final Pattern String1 = Pattern.compile("\"(?:[^\\n\\\\\"]+|\\\\\\n|" + ESCAPE.pattern() + ")*\"?");
-   public static final Pattern String2 = Pattern.compile("'(?:[^\\n\\\\']+|\\\\\\n|" + ESCAPE.pattern() + ")*'?");
-   public static final Pattern String = Pattern.compile(String1.pattern() + "|" + String2.pattern()); 
+   private static final Pattern STRING1 = Pattern.compile("\"(?:[^\\n\\\\\"]+|\\\\\\n|" + ESCAPE.pattern() + ")*\"?");
+   private static final Pattern STRING2 = Pattern.compile("'(?:[^\\n\\\\']+|\\\\\\n|" + ESCAPE.pattern() + ")*'?");
+   private static final Pattern STRING = Pattern.compile(STRING1.pattern() + "|" + STRING2.pattern());
 
-   public static final Pattern HexColor = Pattern.compile("#(?:" + HEX.pattern() + "{6}|" + HEX.pattern() + "{3})");
-   public static final Pattern Num = Pattern.compile("-?(?:[0-9]*\\.[0-9]+|[0-9]+)n?");
-   public static final Pattern Name = Pattern.compile(NMChar.pattern() + "+");
-   public static final Pattern Ident = Pattern.compile("-?" + NMStart.pattern() + NMChar.pattern() + "*");
-   public static final Pattern AtKeyword = Pattern.compile("@" + Ident.pattern());
-   public static final Pattern Percentage = Pattern.compile(Num.pattern() + "%");
+   private static final Pattern HEX_COLOR = Pattern.compile("#(?:" + HEX.pattern() + "{6}|" + HEX.pattern() + "{3})");
+   private static final Pattern NUM = Pattern.compile("-?(?:[0-9]*\\.[0-9]+|[0-9]+)n?");
+   private static final Pattern NAME = Pattern.compile(NM_CHAR.pattern() + "+");
+   private static final Pattern IDENT = Pattern.compile("-?" + NM_START.pattern() + NM_CHAR.pattern() + "*");
+   private static final Pattern AT_KEYWORD = Pattern.compile("@" + IDENT.pattern());
+   private static final Pattern PERCENTAGE = Pattern.compile(NUM.pattern() + "%");
 
-   public static final List<String> reldimensions = Arrays.asList("em", "ex", "px");
-   public static final List<String> absdimensions = Arrays.asList("in", "cm", "mm", "pt", "pc");
-   public static final List<String> stuff = Arrays.asList("s", "dpi", "dppx", "deg");
+   private static final List<String> REDLDIMENSIONS = Arrays.asList("em", "ex", "px");
+   private static final List<String> ABSDIMENSIONS = Arrays.asList("in", "cm", "mm", "pt", "pc");
+   private static final List<String> STUFF = Arrays.asList("s", "dpi", "dppx", "deg");
    
    @SuppressWarnings("unchecked")
-   public static final Pattern Unit = union(reldimensions, absdimensions, stuff);
+   private static final Pattern UNIT = union(REDLDIMENSIONS, ABSDIMENSIONS, STUFF);
 
    @SuppressWarnings("unchecked")
-   public static Pattern union(List<String>... strings) {
+   static Pattern union(List<String>... strings) {
       StringBuilder p = new StringBuilder();
+      p.append("(");
       for(List<String> string : strings) {
          for(String str : string) {
             p.append(str).append("|");
          }
       }
-      return Pattern.compile(p.deleteCharAt(p.length()-1).toString());
+      p.deleteCharAt(p.length()-1);
+      p.append(")");
+      return Pattern.compile(p.toString());
    }
    
-   public static final Pattern Dimension = Pattern.compile(Num.pattern() + Unit.pattern());
-   public static final Pattern Function = Pattern.compile("(?:url|alpha|attr|counters?)\\((?:[^)\\n]|\\\\\\))*\\)?");
-   public static final Pattern Id = Pattern.compile("(?!" + HexColor.pattern() + "\\b(?!-))#" + Name.pattern()); 
-   public static final Pattern Class = Pattern.compile("\\." + Name.pattern());
-   public static final Pattern PseudoClass = Pattern.compile("::?" + Ident.pattern());
-   public static final Pattern AttributeSelector = Pattern.compile("\\[[^\\]]*\\]?");
+   private static final Pattern DIMENSION = Pattern.compile(NUM.pattern() + UNIT.pattern());
+   private static final Pattern FUNCTION = Pattern.compile("(?:url|alpha|attr|counters?)\\((?:[^)\\n]|\\\\\\))*\\)?");
+   private static final Pattern ID = Pattern.compile("(?!" + HEX_COLOR.pattern() + "\\b(?!-))#" + NAME.pattern()); 
+   private static final Pattern Class = Pattern.compile("\\." + NAME.pattern());
+   private static final Pattern PSEUDO_CLASS = Pattern.compile("::?" + IDENT.pattern());
+   private static final Pattern ATTRIBUTE_SELECTOR = Pattern.compile("\\[[^\\]]*\\]?");
 
    public enum State {
       initial,
@@ -70,11 +73,18 @@ public class CSSScanner implements Scanner {
       block
    }
 
+   public static final String OPTION_START_STATE = "state";
+
    @Override
    public void scan(StringScanner source, Encoder encoder, Map<String, Object> options) {
       boolean value_expected = false;
       Stack<State> state = new Stack<State>();
-      state.push(State.initial);
+
+      State initialState = State.initial;
+      if(options.containsKey(OPTION_START_STATE)) {
+         initialState = State.valueOf(String.valueOf(options.get(OPTION_START_STATE)));
+      }
+      state.push(initialState);
       
       while(source.hasMore()) {
          MatchResult m = null;
@@ -100,7 +110,7 @@ public class CSSScanner implements Scanner {
                state.pop();
             }
          }
-         else if( (m = source.scan(String)) != null ){
+         else if( (m = source.scan(STRING)) != null ){
             encoder.beginGroup(TokenType.string);
             encoder.textToken(m.group().substring(0,  1), TokenType.delimiter);
             if(m.group().length() > 2) {
@@ -111,7 +121,7 @@ public class CSSScanner implements Scanner {
             }
             encoder.endGroup(TokenType.string);
          }
-         else if( (m = source.scan(Function)) != null ){
+         else if( (m = source.scan(FUNCTION)) != null ){
             encoder.beginGroup(TokenType.function);
             Matcher functionMatcher = Pattern.compile("^\\w+\\(").matcher(m.group());
             functionMatcher.lookingAt();
@@ -128,10 +138,10 @@ public class CSSScanner implements Scanner {
             }
             encoder.endGroup(TokenType.function);
          }
-         else if( (m = source.scan("(?:" + Dimension.pattern() + "|" + Percentage.pattern() + "|" + Num.pattern() + ")")) != null ){
+         else if( (m = source.scan("(?:" + DIMENSION.pattern() + "|" + PERCENTAGE.pattern() + "|" + NUM.pattern() + ")")) != null ){
             encoder.textToken(m.group(), TokenType.float_);
          }
-         else if( (m = source.scan(HexColor)) != null ){
+         else if( (m = source.scan(HEX_COLOR)) != null ){
             encoder.textToken(m.group(), TokenType.color);
          }
          else if( (m = source.scan("! *important")) != null ){
@@ -140,7 +150,7 @@ public class CSSScanner implements Scanner {
          else if( (m = source.scan("(?:rgb|hsl)a?\\([^()\\n]*\\)?")) != null ){
             encoder.textToken(m.group(), TokenType.color);
          }
-         else if( (m = source.scan(AtKeyword)) != null ){
+         else if( (m = source.scan(AT_KEYWORD)) != null ){
             encoder.textToken(m.group(), TokenType.directive);
          }
          else if( (m = source.scan("[+>~:;,.=()\\/]")) != null ){
@@ -163,7 +173,7 @@ public class CSSScanner implements Scanner {
       
       case initial:
       case media:
-         if( (m = source.scan("(?>" + Ident.pattern() + ")(?!\\()|\\*")) != null ) {
+         if( (m = source.scan("(?>" + IDENT.pattern() + ")(?!\\()|\\*")) != null ) {
             encoder.textToken(m.group(), TokenType.tag);
             return true;
          }
@@ -171,15 +181,15 @@ public class CSSScanner implements Scanner {
             encoder.textToken(m.group(), TokenType.class_);
             return true;
          }
-         else if( (m = source.scan(Id)) != null ) {
+         else if( (m = source.scan(ID)) != null ) {
             encoder.textToken(m.group(), TokenType.id);
             return true;
          }
-         else if( (m = source.scan(PseudoClass)) != null ) {
+         else if( (m = source.scan(PSEUDO_CLASS)) != null ) {
             encoder.textToken(m.group(), TokenType.pseudo_class);
             return true;
          }
-         else if( (m = source.scan(AttributeSelector)) != null ) {
+         else if( (m = source.scan(ATTRIBUTE_SELECTOR)) != null ) {
             encoder.textToken(m.group().substring(0, 1), TokenType.operator);
             if(m.group().length() > 2) {
                encoder.textToken(m.group().substring(1, m.group().length()-1), TokenType.attribute_name);
@@ -197,7 +207,7 @@ public class CSSScanner implements Scanner {
          break;
       
       case block:
-         if( (m = source.scan("(?>" + Ident.pattern() + ")(?!\\()")) != null ) {
+         if( (m = source.scan("(?>" + IDENT.pattern() + ")(?!\\()")) != null ) {
             if (value_expected) {
                encoder.textToken(m.group(), TokenType.value);
             } else {
@@ -208,7 +218,7 @@ public class CSSScanner implements Scanner {
          break;
       
       case media_before_name:
-         if( (m = source.scan(Ident)) != null ) {
+         if( (m = source.scan(IDENT)) != null ) {
             encoder.textToken(m.group(), TokenType.type);
             state.pop();
             state.push(State.media_after_name);

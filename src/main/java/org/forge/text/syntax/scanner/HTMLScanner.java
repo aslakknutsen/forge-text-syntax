@@ -6,6 +6,7 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import org.forge.text.syntax.Encoder;
+import org.forge.text.syntax.Options;
 import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.StringScanner;
 import org.forge.text.syntax.Syntax;
@@ -185,6 +186,9 @@ public class HTMLScanner implements Scanner {
                         Syntax.Builder.create()
                            .scannerType(Scanner.Type.CSS)
                            .encoder(encoder)
+                           .scannerOptions(
+                                 Options.create()
+                                 .add(CSSScanner.OPTION_START_STATE, CSSScanner.State.block))
                            .execute(code);
                      }
 
