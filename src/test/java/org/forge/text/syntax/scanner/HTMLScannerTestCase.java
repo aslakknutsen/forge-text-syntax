@@ -40,7 +40,7 @@ public class HTMLScannerTestCase extends AbstractScannerTestCase {
             .scannerType(Scanner.Type.HTML), "html", "ampersand.in.html");
    }
 
-   @Test @Ignore // Not currently handling script tags as JavaScript
+   @Test
    public void shoulMatchHTMLCDataExample() throws Exception {
       assertMatchExample(
             Builder.create()

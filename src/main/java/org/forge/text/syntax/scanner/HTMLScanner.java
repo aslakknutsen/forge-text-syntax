@@ -103,7 +103,7 @@ public class HTMLScanner implements Scanner {
                if( (m = source.scan(CDATA_START)) != null ) {
                   encoder.textToken(m.group(), TokenType.inline_delimiter);
                   if( (m = source.scan(CDATA_END)) != null) {
-                     encoder.textToken(m.group().substring(0, m.group().length()-4), TokenType.plain);
+                     encoder.textToken(m.group().substring(0, m.group().length()-3), TokenType.plain);
                      encoder.textToken("]]>", TokenType.inline_delimiter);
                   }
                   else if( (m = source.scan(CDATA_ERROR)) != null ) {
