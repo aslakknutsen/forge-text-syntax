@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class CSSScannerTestCase extends AbstractScannerTestCase {
    
-   @Test
+   @Test @Ignore // simple developer test
    public void should() throws Exception {
       
       String source = "/* See http://reference.sitepoint.com/css/content. */\n" +

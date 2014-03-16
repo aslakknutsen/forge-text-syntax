@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class HTMLScannerTestCase extends AbstractScannerTestCase {
    
-   @Test
+   @Test @Ignore // simple developer test
    public void should() throws Exception {
       
       String source = "<p style=\"float:right;\">#{q.answers.size.to_i} answers</p>";

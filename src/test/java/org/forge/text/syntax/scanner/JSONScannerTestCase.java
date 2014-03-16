@@ -6,11 +6,12 @@ import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.TokenType;
 import org.forge.text.syntax.Syntax.Builder;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class JSONScannerTestCase extends AbstractScannerTestCase {
 
-   @Test
+   @Test @Ignore // simple developer test
    public void should() throws Exception {
       
       String source = "[\n" +
