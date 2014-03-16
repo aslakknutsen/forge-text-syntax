@@ -6,8 +6,10 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import org.forge.text.syntax.Encoder;
+import org.forge.text.syntax.Options;
 import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.StringScanner;
+import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.TokenType;
 import org.forge.text.syntax.WordList;
 
@@ -113,8 +115,11 @@ public class JavaScriptScanner implements Scanner {
                   encoder.textToken(m.group(), TokenType.integer);
                }
             }
-            else if( value_expected && (m = source.scan(Pattern.compile("<([[:alpha:]]\\w*) (?: [^\\/>]*\\/> | .*?<\\/\\1>)", Pattern.COMMENTS|Pattern.MULTILINE|Pattern.CASE_INSENSITIVE))) != null ) {
-               // TODO: Invoke HTMLScanner
+            else if( value_expected && (m = source.scan(Pattern.compile("<(\\p{Alpha}\\w*) (?: [^\\/>]*\\/> | .*?<\\/\\1>)", Pattern.COMMENTS|Pattern.DOTALL|Pattern.CASE_INSENSITIVE))) != null ) {
+               Syntax.Builder.create()
+                  .scannerType(Scanner.Type.HTML)
+                  .encoder(encoder)
+                  .execute(m.group());
                value_expected = true;
                continue;
             }

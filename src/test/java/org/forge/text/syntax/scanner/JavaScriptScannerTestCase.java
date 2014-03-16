@@ -49,14 +49,14 @@ public class JavaScriptScannerTestCase extends AbstractScannerTestCase {
             .scannerType(Scanner.Type.JAVA_SCRIPT), "javascript", "sun-spider.in.js");
    }
 
-   @Test @Ignore // don't handle xml in javascript
+   @Test
    public void shoulMatchJavaScriptTraceTestExample() throws Exception {
       assertMatchExample(
             Builder.create()
             .scannerType(Scanner.Type.JAVA_SCRIPT), "javascript", "trace-test.in.js");
    }
 
-   @Test @Ignore // don't handle xml in javascript
+   @Test @Ignore // known issue http://redmine.rubychan.de/issues/137 https://github.com/rubychan/coderay-scanner-tests/blob/master/javascript/xml.known-issue.yaml
    public void shoulMatchJavaScriptXMLExample() throws Exception {
       assertMatchExample(
             Builder.create()
