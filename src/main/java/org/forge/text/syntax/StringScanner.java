@@ -79,8 +79,8 @@ public class StringScanner {
       public static MatchResult freeze(Matcher m, StringSequence sequence) {
          int[][] groups = new int[1+m.groupCount()][2];
          groups[0]  = new int[] {m.start(), m.end()};
-         for(int i = 0; i < m.groupCount(); i++) {
-            groups[i+1] = new int[]{m.start(i), m.end(i)};
+         for(int i = 1; i < m.groupCount()+1; i++) {
+            groups[i] = new int[]{m.start(i), m.end(i)};
          }
          return new StaticMatchResult(sequence, groups);
       }
@@ -89,8 +89,8 @@ public class StringScanner {
          int[][] groups = new int[1+m.groupCount()][2];
          // we want until, so set start to 0
          groups[0]  = new int[] {0, m.end()};
-         for(int i = 0; i < m.groupCount(); i++) {
-            groups[i+1] = new int[]{m.start(i), m.end(i)};
+         for(int i = 1; i < m.groupCount()+1; i++) {
+            groups[i] = new int[]{m.start(i), m.end(i)};
          }
          return new StaticMatchResult(sequence, groups);
       }
@@ -124,11 +124,10 @@ public class StringScanner {
       @Override
       public String group(int group) {
          int[] pos = groups[group];
-         try {
-            return sequence.subSequence(previousIndex, pos[0], pos[1]).toString();
-         } catch(StringIndexOutOfBoundsException e) {
-            return null; // group was never found
+         if(pos[0] == -1) {
+            return null;
          }
+         return sequence.subSequence(previousIndex, pos[0], pos[1]).toString();
       }
 
       @Override

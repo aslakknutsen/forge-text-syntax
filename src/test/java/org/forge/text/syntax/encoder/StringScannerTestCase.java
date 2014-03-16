@@ -1,5 +1,7 @@
 package org.forge.text.syntax.encoder;
 
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.forge.text.syntax.StringScanner;
@@ -57,5 +59,41 @@ public class StringScannerTestCase {
       Pattern p = Pattern.compile("[a-zA-Z_][A-Za-z_0-9]*|\\[\\]");
 
       System.out.println(scan.scan(p).group());
+   }
+
+   @Test
+   public void shouldMatchMatcherGroups() throws Exception {
+      Pattern p = Pattern.compile("<(?:(script|style)|[-\\w.:]+)(>)?", Pattern.DOTALL);
+
+      String source = "<textarea disabled>\n" +
+            "  This text area has been disabled.\n" +
+            "</textarea>";
+
+      Matcher m = p.matcher(source);
+      m.find();
+
+      StringScanner scanner = new StringScanner(source);
+      MatchResult result = scanner.scan(p);
+
+      // Verify group match returned are the same. g 1/2 should be null
+      Assert.assertEquals(null, m.group(1));
+      Assert.assertEquals(null, m.group(2));
+      Assert.assertEquals(m.group(), result.group());
+      Assert.assertEquals(m.group(1), result.group(1));
+      Assert.assertEquals(m.group(2), result.group(2));
+
+      // Verify group start returned are the same. g 1/2 should be -1
+      Assert.assertEquals(-1, m.start(1));
+      Assert.assertEquals(-1, m.start(2));
+      Assert.assertEquals(m.start(), result.start());
+      Assert.assertEquals(m.start(1), result.start(1));
+      Assert.assertEquals(m.start(2), result.start(2));
+
+      // Verify group end returned are the same. g 1/2 should be -1
+      Assert.assertEquals(-1, m.end(1));
+      Assert.assertEquals(-1, m.end(2));
+      Assert.assertEquals(m.end(), result.end());
+      Assert.assertEquals(m.end(1), result.end(1));
+      Assert.assertEquals(m.end(2), result.end(2));
    }
 }
