@@ -5,6 +5,7 @@ import static org.forge.text.syntax.encoder.AssertEncoder.assertTextToken;
 import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.TokenType;
+import org.forge.text.syntax.Syntax.Builder;
 import org.junit.Test;
 
 public class JSONScannerTestCase extends AbstractScannerTestCase {
@@ -41,5 +42,33 @@ public class JSONScannerTestCase extends AbstractScannerTestCase {
       assertTextToken(TokenType.content, "zip", "CA", "US");
       assertTextToken(TokenType.integer, "37");
       assertTextToken(TokenType.float_, "37.371991", "-122.3959");
+   }
+
+   @Test
+   public void shoulMatchJSONExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.JSON), "json", "example.in.json");
+   }
+
+   @Test
+   public void shoulMatchJSONLibExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.JSON), "json", "json-lib.in.json");
+   }
+
+   @Test
+   public void shoulMatchJSONBigExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.JSON), "json", "big.in.json");
+   }
+
+   @Test
+   public void shoulMatchJSONBig2Example() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.JSON), "json", "big2.in.json");
    }
 }

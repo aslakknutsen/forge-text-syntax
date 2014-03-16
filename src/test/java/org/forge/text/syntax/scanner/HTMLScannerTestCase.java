@@ -5,6 +5,7 @@ import static org.forge.text.syntax.encoder.AssertEncoder.assertTextToken;
 import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.Syntax;
 import org.forge.text.syntax.TokenType;
+import org.forge.text.syntax.Syntax.Builder;
 import org.junit.Test;
 
 public class HTMLScannerTestCase extends AbstractScannerTestCase {
@@ -15,12 +16,19 @@ public class HTMLScannerTestCase extends AbstractScannerTestCase {
       String source = "<p style=\"float:right;\">#{q.answers.size.to_i} answers</p>";
       
       Syntax.Builder.create().scannerType(Scanner.Type.HTML).encoderType(ASSERT_ENCODER).execute(source);
- 
+
       assertTextToken(TokenType.tag, "<p");
       assertTextToken(TokenType.attribute_name, "style");
       assertTextToken(TokenType.key, "float");
       //assertTextToken(TokenType.tag, "<html>", "<head>", "<meta", "<title>", "<body>", "<link", "<style>", "<script", "<div", "<hr>", "<footer>");
       //assertTextToken(TokenType.attribute_name, "charset", "content", "src", "class");
       //assertTextToken(TokenType.content, "utf-8", "navbar-inner", "text/javascript", "width=device-width, initial-scale=1.0");
+   }
+
+   @Test
+   public void shoulMatchHTMLBooleanExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "html", "boolean.in.html");
    }
 }

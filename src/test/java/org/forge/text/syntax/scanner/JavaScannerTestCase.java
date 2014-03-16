@@ -4,6 +4,7 @@ import static org.forge.text.syntax.encoder.AssertEncoder.assertTextToken;
 
 import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.Syntax;
+import org.forge.text.syntax.Syntax.Builder;
 import org.forge.text.syntax.TokenType;
 import org.junit.Test;
 
@@ -42,5 +43,19 @@ public class JavaScannerTestCase extends AbstractScannerTestCase {
       assertTextToken(TokenType.directive, "public");
       assertTextToken(TokenType.content, "message");
       assertTextToken(TokenType.char_, "\\n", "\\\\");
+   }
+
+   @Test
+   public void shoulMatchJavaExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.JAVA), "java", "example.in.java");
+   }
+
+   @Test
+   public void shoulMatchJavaJRubyExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.JAVA), "java", "jruby.in.java");
    }
 }
