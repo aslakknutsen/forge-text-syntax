@@ -69,16 +69,37 @@ public class HTMLScannerTestCase extends AbstractScannerTestCase {
    }
 
    @Test
-   public void shoulMatchTolkienTagsExample() throws Exception {
+   public void shoulMatchHTMLTolkienTagsExample() throws Exception {
       assertMatchExample(
             Builder.create()
             .scannerType(Scanner.Type.HTML), "html", "tolkien.in.html");
    }
 
    @Test
-   public void shoulMatchTPuthTagsExample() throws Exception {
+   public void shoulMatchHTMLTPuthTagsExample() throws Exception {
       assertMatchExample(
             Builder.create()
             .scannerType(Scanner.Type.HTML), "html", "tputh.in.html");
+   }
+
+   @Test
+   public void shoulMatchXMLDTDExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "xml", "dtd.in.xml");
+   }
+
+   @Test @Ignore // Some issue with new_line in output, revisit
+   public void shoulMatchXMLKateExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "xml", "kate.in.xml");
+   }
+
+   @Test
+   public void shoulMatchXMLXAMLExample() throws Exception {
+      assertMatchExample(
+            Builder.create()
+            .scannerType(Scanner.Type.HTML), "xml", "xaml.in.xml");
    }
 }
