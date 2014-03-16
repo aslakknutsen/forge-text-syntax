@@ -63,6 +63,30 @@ public class JavaScriptScanner implements Scanner {
       KEY_CHECK_PATTERN.put("\"", Pattern.compile(" (?> [^\\\\\"]* (?: \\\\. [^\\\\\"]* )* ) \" \\s* : ", Pattern.COMMENTS|Pattern.DOTALL));
    }
 
+   private static final Pattern SPACE = Pattern.compile(" \\s+ | \\\\\\n ", Pattern.COMMENTS);
+   private static final Pattern COMMENT = Pattern.compile(" // [^\\n\\\\]* (?: \\\\. [^\\n\\\\]* )* | /\\* (?: .*? \\*/ | .*() ) ", Pattern.COMMENTS|Pattern.DOTALL);
+   private static final Pattern COMMENT_MULTILINE = Pattern.compile(" .*? \\*", Pattern.COMMENTS|Pattern.DOTALL);
+   private static final Pattern COMMENT_MULTILINE_CONTENT = Pattern.compile(" .+ ", Pattern.COMMENTS|Pattern.DOTALL);
+   private static final Pattern NUMBER = Pattern.compile("\\.?\\d");
+   private static final Pattern HEX = Pattern.compile("0[xX][0-9A-Fa-f]+");
+   private static final Pattern OCTAL = Pattern.compile("(?>0[0-7]+)(?![89.eEfF])");
+   private static final Pattern FLOAT = Pattern.compile("\\d+[fF]|\\d*\\.\\d+(?:[eE][+-]?\\d+)?[fF]?|\\d+[eE][+-]?\\d+[fF]?");
+   private static final Pattern INTEGER = Pattern.compile("\\d+");
+   private static final Pattern HTML = Pattern.compile("<(\\p{Alpha}\\w*) (?: [^\\/>]*\\/> | .*?<\\/\\1>)", Pattern.COMMENTS|Pattern.DOTALL|Pattern.CASE_INSENSITIVE);
+   private static final Pattern OPERATOR = Pattern.compile(" [-+*=<>?:;,!&^|(\\[{~%]+ | \\.(?!\\d) ", Pattern.COMMENTS);
+   private static final Pattern OPERATOR_END = Pattern.compile(" [)\\]}]+ ", Pattern.COMMENTS);
+   private static final Pattern IDENT = Pattern.compile(" [$a-zA-Z_][A-Za-z_0-9$]* ", Pattern.COMMENTS);
+   private static final Pattern FUNCTION = Pattern.compile("\\s*[=:]\\s*function\\b");
+   private static final Pattern KEY = Pattern.compile("\\s*:");
+   private static final Pattern ARRAY_KEY = Pattern.compile("[\"']");
+   private static final Pattern REGEXP = Pattern.compile("\\/");
+   private static final Pattern DELIMITER = Pattern.compile("[\"'\\/]");
+   private static final Pattern MODIFIER = Pattern.compile("[gim]+");
+   private static final Pattern CONTENT = Pattern.compile(" \\\\ (?: " + ESCAPE.pattern() + " | " + UNICODE_ESCAPE.pattern() + ")", Pattern.COMMENTS|Pattern.DOTALL);
+   private static final Pattern CONTENT_2 = Pattern.compile("\\\\.", Pattern.DOTALL);
+   private static final Pattern CONTENT_END = Pattern.compile(" \\\\ | $ ", Pattern.COMMENTS);
+   private static final Pattern CHAR = Pattern.compile(" \\\\ (?: " + ESCAPE.pattern() + " | " + REGEXP_ESSCAPE.pattern() +" | " + UNICODE_ESCAPE.pattern() +" ) ", Pattern.COMMENTS|Pattern.DOTALL);
+
    public enum State {
       innitial,
       open_multi_line_comment,
@@ -86,35 +110,35 @@ public class JavaScriptScanner implements Scanner {
          switch (state) {
          case innitial:
 
-            if( (m = source.scan(Pattern.compile(" \\s+ | \\\\\\n ", Pattern.COMMENTS))) != null ) {
+            if( (m = source.scan(SPACE)) != null ) {
                if(!value_expected && m.group().indexOf("\n") != -1) {
                   value_expected = true;
                }
                encoder.textToken(m.group(), TokenType.space);
             }
-            else if( (m = source.scan(Pattern.compile(" // [^\\n\\\\]* (?: \\\\. [^\\n\\\\]* )* | /\\* (?: .*? \\*/ | .*() ) ", Pattern.COMMENTS|Pattern.DOTALL))) != null ) {
+            else if( (m = source.scan(COMMENT)) != null ) {
                value_expected = true;
                encoder.textToken(m.group(), TokenType.comment);
                if(m.group(1) != null) {
                   state = State.open_multi_line_comment;
                }
             }
-            else if( (m = source.check(Pattern.compile("\\.?\\d"))) != null ) {
+            else if( (m = source.check(NUMBER)) != null ) {
                key_expected = value_expected = false;
-               if( (m = source.scan(Pattern.compile("0[xX][0-9A-Fa-f]+"))) != null ) {
+               if( (m = source.scan(HEX)) != null ) {
                   encoder.textToken(m.group(), TokenType.hex);
                }
-               else if( (m = source.scan(Pattern.compile("(?>0[0-7]+)(?![89.eEfF])"))) != null ) {
+               else if( (m = source.scan(OCTAL)) != null ) {
                   encoder.textToken(m.group(), TokenType.octal);
                }
-               else if( (m = source.scan(Pattern.compile("\\d+[fF]|\\d*\\.\\d+(?:[eE][+-]?\\d+)?[fF]?|\\d+[eE][+-]?\\d+[fF]?"))) != null ) {
+               else if( (m = source.scan(FLOAT)) != null ) {
                   encoder.textToken(m.group(), TokenType.float_);
                }
-               else if( (m = source.scan(Pattern.compile("\\d+"))) != null ) {
+               else if( (m = source.scan(INTEGER)) != null ) {
                   encoder.textToken(m.group(), TokenType.integer);
                }
             }
-            else if( value_expected && (m = source.scan(Pattern.compile("<(\\p{Alpha}\\w*) (?: [^\\/>]*\\/> | .*?<\\/\\1>)", Pattern.COMMENTS|Pattern.DOTALL|Pattern.CASE_INSENSITIVE))) != null ) {
+            else if( value_expected && (m = source.scan(HTML)) != null ) {
                Syntax.Builder.create()
                   .scannerType(Scanner.Type.HTML)
                   .encoder(encoder)
@@ -122,18 +146,18 @@ public class JavaScriptScanner implements Scanner {
                value_expected = true;
                continue;
             }
-            else if( (m = source.scan(Pattern.compile(" [-+*=<>?:;,!&^|(\\[{~%]+ | \\.(?!\\d) ", Pattern.COMMENTS))) != null ) {
+            else if( (m = source.scan(OPERATOR)) != null ) {
                value_expected = true;
                String last_operator = m.group().substring(m.group().length()-1);
                key_expected = last_operator.equals("{") || last_operator.equals(",");
                function_expected = false;
                encoder.textToken(m.group(), TokenType.operator);
             }
-            else if( (m = source.scan(Pattern.compile(" [)\\]}]+ ", Pattern.COMMENTS))) != null ) {
+            else if( (m = source.scan(OPERATOR_END)) != null ) {
                function_expected = key_expected = value_expected = false;
                encoder.textToken(m.group(), TokenType.operator);
             }
-            else if( (m = source.scan(Pattern.compile(" [$a-zA-Z_][A-Za-z_0-9$]* ", Pattern.COMMENTS))) != null ) {
+            else if( (m = source.scan(IDENT)) != null ) {
                TokenType kind = IDENT_KIND.lookup(m.group());
                value_expected = (kind == TokenType.keyword) && KEYWORDS_EXPECTING_VALUE.lookup(m.group());
                if(TokenType.ident == kind) {
@@ -143,10 +167,10 @@ public class JavaScriptScanner implements Scanner {
                   else if(function_expected) {
                      kind = TokenType.function;
                   }
-                  else if(source.check(Pattern.compile("\\s*[=:]\\s*function\\b")) != null) {
+                  else if(source.check(FUNCTION) != null) {
                      kind = TokenType.function;
                   }
-                  else if(key_expected && source.check(Pattern.compile("\\s*:")) != null) {
+                  else if(key_expected && source.check(KEY) != null) {
                      kind = TokenType.key;
                   }
                }
@@ -154,7 +178,7 @@ public class JavaScriptScanner implements Scanner {
                key_expected = false;
                encoder.textToken(m.group(), kind);
             }
-            else if( (m = source.scan(Pattern.compile("[\"']"))) != null ) {
+            else if( (m = source.scan(ARRAY_KEY)) != null ) {
                if(key_expected && source.check(KEY_CHECK_PATTERN.get(m.group())) != null) {
                   state = State.key;
                }
@@ -165,13 +189,13 @@ public class JavaScriptScanner implements Scanner {
                string_delimiter = m.group();
                encoder.textToken(m.group(), TokenType.delimiter);
             }
-            else if( value_expected && (m = source.scan(Pattern.compile("\\/"))) != null ) {
+            else if( value_expected && (m = source.scan(REGEXP)) != null ) {
                encoder.beginGroup(TokenType.regexp);
                state = State.regexp;
                string_delimiter = "/";
                encoder.textToken(m.group(), TokenType.delimiter);
             }
-            else if( (m = source.scan(Pattern.compile(" \\/ ", Pattern.COMMENTS))) != null ) {
+            else if( (m = source.scan(REGEXP)) != null ) {
                value_expected = true;
                key_expected = false;
                encoder.textToken(m.group(), TokenType.operator);
@@ -188,11 +212,11 @@ public class JavaScriptScanner implements Scanner {
             if( (m = source.scan(STRING_CONTENT_PATTERN.get(string_delimiter))) != null ) {
                encoder.textToken(m.group(), TokenType.content);
             }
-            else if( (m = source.scan(Pattern.compile("[\"'\\/]"))) != null ) {
+            else if( (m = source.scan(DELIMITER)) != null ) {
                encoder.textToken(m.group(), TokenType.delimiter);
                if(State.regexp == state) {
                   MatchResult modifiers;
-                  if( (modifiers = source.scan(Pattern.compile("[gim]+"))) != null) {
+                  if( (modifiers = source.scan(MODIFIER)) != null) {
                      encoder.textToken(modifiers.group(), TokenType.modifier);
                   }
                }
@@ -201,7 +225,7 @@ public class JavaScriptScanner implements Scanner {
                key_expected = value_expected = false;
                state = State.innitial;
             }
-            else if( State.regexp != state && (m = source.scan(Pattern.compile(" \\\\ (?: " + ESCAPE.pattern() + " | " + UNICODE_ESCAPE.pattern() + ")", Pattern.COMMENTS|Pattern.DOTALL))) != null ) {
+            else if( State.regexp != state && (m = source.scan(CONTENT)) != null ) {
                if( string_delimiter.equals("'") && !(m.group().equals("\\\\") || m.group().equals("\\'")) ) {
                   encoder.textToken(m.group(), TokenType.content);
                }
@@ -209,13 +233,13 @@ public class JavaScriptScanner implements Scanner {
                   encoder.textToken(m.group(), TokenType.char_);
                }
             }
-            else if( State.regexp == state && (m = source.scan(Pattern.compile(" \\\\ (?: " + ESCAPE.pattern() + " | " + REGEXP_ESSCAPE.pattern() +" | " + UNICODE_ESCAPE.pattern() +" ) ", Pattern.COMMENTS|Pattern.DOTALL))) != null ) {
+            else if( State.regexp == state && (m = source.scan(CHAR)) != null ) {
                encoder.textToken(m.group(), TokenType.char_);
             }
-            else if( (m = source.scan(Pattern.compile("\\\\.", Pattern.DOTALL))) != null ) {
+            else if( (m = source.scan(CONTENT_2)) != null ) {
                encoder.textToken(m.group(), TokenType.content);
             }
-            else if( (m = source.scan(Pattern.compile(" \\\\ | $ ", Pattern.COMMENTS))) != null ) {
+            else if( (m = source.scan(CONTENT_END)) != null ) {
                encoder.endGroup(TokenType.valueOf(state.name()));
                if(!m.group().isEmpty()) {
                   encoder.textToken(m.group(), TokenType.error);
@@ -231,11 +255,11 @@ public class JavaScriptScanner implements Scanner {
 
          case open_multi_line_comment:
 
-            if( (m = source.scan(Pattern.compile(" .*? \\*", Pattern.COMMENTS|Pattern.DOTALL))) != null ) {
+            if( (m = source.scan(COMMENT_MULTILINE)) != null ) {
                state = State.innitial;
             }
             else {
-               m = source.scan(Pattern.compile(" .+ ", Pattern.COMMENTS|Pattern.DOTALL));
+               m = source.scan(COMMENT_MULTILINE_CONTENT);
             }
             value_expected = true;
             if(m != null) {
