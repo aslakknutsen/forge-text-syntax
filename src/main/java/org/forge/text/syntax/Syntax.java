@@ -173,6 +173,9 @@ public class Syntax {
       else if(fileName.matches(".*\\.(css)$")) {
          return Scanner.Type.CSS;
       }
+      else if(fileName.matches(".*\\.(js)$")) {
+         return Scanner.Type.JAVA_SCRIPT;
+      }
       else if(fileName.matches(".*\\.(java)$")) {
          return Scanner.Type.JAVA;
       }
