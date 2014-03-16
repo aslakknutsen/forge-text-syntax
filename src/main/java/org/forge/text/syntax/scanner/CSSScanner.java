@@ -65,6 +65,21 @@ public class CSSScanner implements Scanner {
    private static final Pattern PSEUDO_CLASS = Pattern.compile("::?" + IDENT.pattern());
    private static final Pattern ATTRIBUTE_SELECTOR = Pattern.compile("\\[[^\\]]*\\]?");
 
+   private static final Pattern SPACE = Pattern.compile("\\s+");
+   private static final Pattern COMMENT = Pattern.compile("\\/\\*(?:.*?\\*\\/|\\z)", Pattern.DOTALL);
+   private static final Pattern BRACKET_OPEN = Pattern.compile("\\{");
+   private static final Pattern BRACKET_CLOSE = Pattern.compile("\\}");
+   private static final Pattern FUNCTION_NAME = Pattern.compile("^\\w+\\(");
+   private static final Pattern FLOAT = Pattern.compile("(?:" + DIMENSION.pattern() + "|" + PERCENTAGE.pattern() + "|" + NUM.pattern() + ")");
+   private static final Pattern IMPORTANT = Pattern.compile("! *important");
+   private static final Pattern COLOR = Pattern.compile("(?:rgb|hsl)a?\\([^()\\n]*\\)?");
+   private static final Pattern OPERATOR = Pattern.compile("[+>~:;,.=()\\/]");
+   private static final Pattern TAG = Pattern.compile("(?>" + IDENT.pattern() + ")(?!\\()|\\*");
+   private static final Pattern MEDIA = Pattern.compile("@media");
+   private static final Pattern KEY_VALUE = Pattern.compile("(?>" + IDENT.pattern() + ")(?!\\()");
+   private static final Pattern PARENTHESES_END = Pattern.compile(".?\\)");
+   private static final Pattern SQUARE_END = Pattern.compile(".?\\]");
+
    public enum State {
       initial,
       media,
@@ -89,21 +104,21 @@ public class CSSScanner implements Scanner {
       while(source.hasMore()) {
          MatchResult m = null;
       
-         if( (m = source.scan("\\s+")) != null) {
+         if( (m = source.scan(SPACE)) != null) {
             encoder.textToken(m.group(), TokenType.space);
          }
          else if(media_blocks(source, encoder, value_expected, state)) {
 
          }
-         else if( (m = source.scan(Pattern.compile("\\/\\*(?:.*?\\*\\/|\\z)", Pattern.DOTALL))) != null ){
+         else if( (m = source.scan(COMMENT)) != null ){
             encoder.textToken(m.group(), TokenType.comment);
          }
-         else if( (m = source.scan("\\{")) != null ){
+         else if( (m = source.scan(BRACKET_OPEN)) != null ){
             value_expected = false;
             encoder.textToken(m.group(), TokenType.operator);
             state.push(State.block);
          }
-         else if( (m = source.scan("\\}")) != null ){
+         else if( (m = source.scan(BRACKET_CLOSE)) != null ){
             value_expected = false;
             encoder.textToken(m.group(), TokenType.operator);
             if(state.peek() == State.block || state.peek() == State.media) {
@@ -123,11 +138,11 @@ public class CSSScanner implements Scanner {
          }
          else if( (m = source.scan(FUNCTION)) != null ){
             encoder.beginGroup(TokenType.function);
-            Matcher functionMatcher = Pattern.compile("^\\w+\\(").matcher(m.group());
+            Matcher functionMatcher = FUNCTION_NAME.matcher(m.group());
             functionMatcher.lookingAt();
             String start = functionMatcher.group();
             encoder.textToken(start, TokenType.delimiter);
-            if(m.group().substring(m.group().length()-1).matches(".?\\)")) {
+            if(PARENTHESES_END.matcher(m.group().substring(m.group().length()-1)).matches()) {
                if(m.group().length() > start.length()+1) {
                   encoder.textToken(m.group().substring(start.length(), m.group().length()-1), TokenType.content);
                   encoder.textToken(")", TokenType.delimiter);
@@ -138,22 +153,22 @@ public class CSSScanner implements Scanner {
             }
             encoder.endGroup(TokenType.function);
          }
-         else if( (m = source.scan("(?:" + DIMENSION.pattern() + "|" + PERCENTAGE.pattern() + "|" + NUM.pattern() + ")")) != null ){
+         else if( (m = source.scan(FLOAT)) != null ){
             encoder.textToken(m.group(), TokenType.float_);
          }
          else if( (m = source.scan(HEX_COLOR)) != null ){
             encoder.textToken(m.group(), TokenType.color);
          }
-         else if( (m = source.scan("! *important")) != null ){
+         else if( (m = source.scan(IMPORTANT)) != null ){
             encoder.textToken(m.group(), TokenType.important);
          }
-         else if( (m = source.scan("(?:rgb|hsl)a?\\([^()\\n]*\\)?")) != null ){
+         else if( (m = source.scan(COLOR)) != null ){
             encoder.textToken(m.group(), TokenType.color);
          }
          else if( (m = source.scan(AT_KEYWORD)) != null ){
             encoder.textToken(m.group(), TokenType.directive);
          }
-         else if( (m = source.scan("[+>~:;,.=()\\/]")) != null ){
+         else if( (m = source.scan(OPERATOR)) != null ){
             if(":".equals(m.group())) {
                value_expected = true;
             } else if(";".equals(m.group())) {
@@ -173,7 +188,7 @@ public class CSSScanner implements Scanner {
       
       case initial:
       case media:
-         if( (m = source.scan("(?>" + IDENT.pattern() + ")(?!\\()|\\*")) != null ) {
+         if( (m = source.scan(TAG)) != null ) {
             encoder.textToken(m.group(), TokenType.tag);
             return true;
          }
@@ -194,12 +209,12 @@ public class CSSScanner implements Scanner {
             if(m.group().length() > 2) {
                encoder.textToken(m.group().substring(1, m.group().length()-1), TokenType.attribute_name);
             }
-            if(m.group().substring(m.group().length()-1).matches(".?\\]")) {
+            if(SQUARE_END.matcher(m.group().substring(m.group().length()-1)).matches()) {
                encoder.textToken(m.group().substring(m.group().length()-1), TokenType.operator);
             }
             return true;
          }
-         else if( (m = source.scan("@media")) != null ) {
+         else if( (m = source.scan(MEDIA)) != null ) {
             encoder.textToken(m.group(), TokenType.directive);
             state.push(State.media_before_name);
             return true;
@@ -207,7 +222,7 @@ public class CSSScanner implements Scanner {
          break;
       
       case block:
-         if( (m = source.scan("(?>" + IDENT.pattern() + ")(?!\\()")) != null ) {
+         if( (m = source.scan(KEY_VALUE)) != null ) {
             if (value_expected) {
                encoder.textToken(m.group(), TokenType.value);
             } else {
@@ -227,7 +242,7 @@ public class CSSScanner implements Scanner {
          break;
       
       case media_after_name:
-         if( (m = source.scan("\\{")) != null ) {
+         if( (m = source.scan(BRACKET_OPEN)) != null ) {
             encoder.textToken(m.group(), TokenType.operator);
             state.pop();
             state.push(State.media);
