@@ -25,7 +25,7 @@ public abstract class AbstractScannerTestCase {
 
    public static String OUTPUT = "target/examples";
    public static String BASE_URL = "https://raw.github.com/rubychan/coderay-scanner-tests/master/";
-   public static Pattern MATCH_DATA = Pattern.compile("\\.");
+   public static Pattern MATCH_DATA = Pattern.compile("(.*)\\..*\\..*");
 
    public static String fetch(String type, String example) throws Exception {
       Path sourcePath = Paths.get(OUTPUT, type, example);
@@ -42,7 +42,7 @@ public abstract class AbstractScannerTestCase {
       Matcher result = MATCH_DATA.matcher(example);
       result.find();
 
-      return example.substring(0, result.start()) + ".expected.raydebug";
+      return result.group(1) + ".expected.raydebug";
    }
 
    public void assertMatchExample(Syntax.Builder builder, String type, String exampleName) throws Exception {
