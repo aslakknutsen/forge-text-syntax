@@ -6,7 +6,6 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
 import org.forge.text.syntax.Encoder;
-import org.forge.text.syntax.Options;
 import org.forge.text.syntax.Scanner;
 import org.forge.text.syntax.StringScanner;
 import org.forge.text.syntax.Syntax;
