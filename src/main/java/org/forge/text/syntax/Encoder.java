@@ -41,26 +41,12 @@ public interface Encoder {
             throw new RuntimeException("Could not write to output", e);
          }
       }
-      protected void writeln(String str) {
+
+      protected void write(byte[] bytes) {
          try {
-            out.write(str.getBytes());
-            out.write(NEW_LINE.getBytes());
+            out.write(bytes);
          } catch(IOException e) {
             throw new RuntimeException("Could not write to output", e);
-         }
-      }
-      protected void newLine() {
-         try {
-            out.write(NEW_LINE.getBytes());
-         } catch(IOException e) {
-            throw new RuntimeException("Could not write to output", e);
-         }
-      }
-      protected void flush() {
-         try {
-            out.flush();
-         } catch(IOException e) {
-            throw new RuntimeException("Could not flush", e);
          }
       }
    }
